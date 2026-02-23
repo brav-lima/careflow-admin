@@ -1,0 +1,142 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_ADMIN_URL")
+}
+
+// ──────────────────────────────────────────────
+// AdminUser — usuários internos do painel
+// ──────────────────────────────────────────────
+
+enum AdminRole {
+  SUPER_ADMIN
+  FINANCE
+  SUPPORT
+}
+
+model AdminUser {
+  id           String    @id @default(uuid())
+  name         String
+  email        String    @unique
+  passwordHash String    @map("password_hash")
+  role         AdminRole @default(SUPPORT)
+  active       Boolean   @default(true)
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+
+  @@map("admin_users")
+}
+
+// ──────────────────────────────────────────────
+// Organization — cliente SaaS (clínica contratante)
+// Visão comercial/billing — diferente da Organization do banco clínico
+// ──────────────────────────────────────────────
+
+enum OrgStatus {
+  ACTIVE
+  SUSPENDED
+  CANCELED
+}
+
+model Organization {
+  id         String    @id @default(uuid())
+  name       String
+  document   String    @unique // CNPJ
+  email      String
+  phone      String?
+  status     OrgStatus @default(ACTIVE)
+  clinicExternalId String? @map("clinic_external_id") // ID da Clinic no careflow (sem FK cross-db)
+  createdAt  DateTime  @default(now()) @map("created_at")
+  updatedAt  DateTime  @updatedAt @map("updated_at")
+
+  subscriptions Subscription[]
+
+  @@index([status])
+  @@map("organizations")
+}
+
+// ──────────────────────────────────────────────
+// Plan — planos de assinatura
+// ──────────────────────────────────────────────
+
+model Plan {
+  id           String   @id @default(uuid())
+  name         String
+  priceMonthly Decimal  @db.Decimal(10, 2) @map("price_monthly")
+  maxUsers     Int      @map("max_users")
+  maxPatients  Int      @map("max_patients")
+  features     Json? // ex: { nfse: true, whatsapp: false }
+  isActive     Boolean  @default(true) @map("is_active")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  subscriptions Subscription[]
+
+  @@map("plans")
+}
+
+// ──────────────────────────────────────────────
+// Subscription — vínculo org ↔ plano
+// ──────────────────────────────────────────────
+
+enum SubscriptionStatus {
+  TRIAL
+  ACTIVE
+  PAST_DUE
+  CANCELED
+}
+
+model Subscription {
+  id             String             @id @default(uuid())
+  organizationId String             @map("organization_id")
+  planId         String             @map("plan_id")
+  status         SubscriptionStatus @default(TRIAL)
+  startDate      DateTime           @map("start_date")
+  endDate        DateTime?          @map("end_date")
+  trialEndsAt    DateTime?          @map("trial_ends_at")
+  createdAt      DateTime           @default(now()) @map("created_at")
+  updatedAt      DateTime           @updatedAt @map("updated_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+  plan         Plan         @relation(fields: [planId], references: [id])
+  invoices     Invoice[]
+
+  @@index([organizationId])
+  @@index([planId])
+  @@index([status])
+  @@map("subscriptions")
+}
+
+// ──────────────────────────────────────────────
+// Invoice — faturas geradas por assinatura
+// ──────────────────────────────────────────────
+
+enum InvoiceStatus {
+  PENDING
+  PAID
+  OVERDUE
+  CANCELED
+}
+
+model Invoice {
+  id                String        @id @default(uuid())
+  subscriptionId    String        @map("subscription_id")
+  amount            Decimal       @db.Decimal(10, 2)
+  status            InvoiceStatus @default(PENDING)
+  dueDate           DateTime      @map("due_date")
+  paidAt            DateTime?     @map("paid_at")
+  externalReference String?       @map("external_reference") // ID no gateway (Asaas/Stripe)
+  notes             String?
+  createdAt         DateTime      @default(now()) @map("created_at")
+  updatedAt         DateTime      @updatedAt @map("updated_at")
+
+  subscription Subscription @relation(fields: [subscriptionId], references: [id])
+
+  @@index([subscriptionId])
+  @@index([status])
+  @@index([dueDate])
+  @@map("invoices")
+}
