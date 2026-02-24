@@ -13,6 +13,7 @@ import { CreateOrganizationDto } from './dto/create-organization.dto'
 import { UpdateOrganizationDto, UpdateOrgStatusDto } from './dto/update-organization.dto'
 import { Inject } from '@nestjs/common'
 import { IOrganizationRepository, ORGANIZATION_REPOSITORY } from './domain/organization.repository'
+import { ClinicApiService } from '../clinic-api/clinic-api.service'
 
 @ApiTags('organizations')
 @ApiBearerAuth()
@@ -23,9 +24,16 @@ export class OrganizationsController {
     private readonly createOrg: CreateOrganizationUseCase,
     private readonly updateOrgStatus: UpdateOrgStatusUseCase,
     private readonly listOrgs: ListOrganizationsUseCase,
+    private readonly clinicApi: ClinicApiService,
     @Inject(ORGANIZATION_REPOSITORY)
     private readonly repo: IOrganizationRepository,
   ) {}
+
+  @Get('available-clinics')
+  @Roles('SUPER_ADMIN', 'SUPPORT')
+  availableClinics() {
+    return this.clinicApi.listClinics()
+  }
 
   @Post()
   @Roles('SUPER_ADMIN', 'SUPPORT')

@@ -14,6 +14,15 @@ export interface CreateClinicResponse {
   clinicId: string
 }
 
+export interface ClinicSummary {
+  clinicId: string
+  name: string
+  document: string | null
+  email: string | null
+  phone: string | null
+  accessStatus: 'ACTIVE' | 'BLOCKED'
+}
+
 @Injectable()
 export class ClinicApiService {
   private readonly logger = new Logger(ClinicApiService.name)
@@ -49,6 +58,25 @@ export class ClinicApiService {
     }
 
     return res.json() as Promise<CreateClinicResponse>
+  }
+
+  async listClinics(): Promise<ClinicSummary[]> {
+    this.logger.log('Listing clinics from careflow')
+
+    const res = await fetch(`${this.baseUrl}/internal/clinics`, {
+      method: 'GET',
+      headers: this.headers,
+    }).catch(() => {
+      throw new ServiceUnavailableException('careflow API indisponível')
+    })
+
+    if (!res.ok) {
+      const body = await res.text()
+      this.logger.error(`listClinics failed [${res.status}]: ${body}`)
+      throw new ServiceUnavailableException(`Erro ao listar clínicas do careflow: ${res.status}`)
+    }
+
+    return res.json() as Promise<ClinicSummary[]>
   }
 
   async updateClinicAccess(clinicId: string, status: ClinicAccessStatus): Promise<void> {
