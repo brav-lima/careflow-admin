@@ -2,6 +2,9 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { api } from '@/lib/api'
 import { formatDate, formatCurrency } from '@/lib/utils'
 import type { Invoice, InvoiceStatus } from '@/types/admin'
+import { Skeleton } from '@/components/ui/skeleton'
+import { useToast } from '@/contexts/ToastContext'
+import { getErrorMessage } from '@/lib/utils'
 
 const statusLabel: Record<InvoiceStatus, { label: string; className: string }> = {
   PENDING: { label: 'Pendente', className: 'bg-yellow-100 text-yellow-700' },
@@ -12,6 +15,7 @@ const statusLabel: Record<InvoiceStatus, { label: string; className: string }> =
 
 export function InvoicesPage() {
   const queryClient = useQueryClient()
+  const { toast } = useToast()
 
   const { data: invoices, isLoading } = useQuery<Invoice[]>({
     queryKey: ['invoices'],
@@ -20,15 +24,49 @@ export function InvoicesPage() {
 
   const markPaid = useMutation({
     mutationFn: (id: string) => api.patch(`/invoices/${id}/mark-paid`),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['invoices'] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['invoices'] })
+      toast.success('Fatura marcada como paga')
+    },
+    onError: (err) => toast.error(getErrorMessage(err)),
   })
 
   const cancelInvoice = useMutation({
     mutationFn: (id: string) => api.patch(`/invoices/${id}/cancel`),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['invoices'] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['invoices'] })
+      toast.success('Fatura cancelada')
+    },
+    onError: (err) => toast.error(getErrorMessage(err)),
   })
 
-  if (isLoading) return <div className="text-muted-foreground text-sm">Carregando...</div>
+  if (isLoading) {
+    return (
+      <div className="space-y-4">
+        <Skeleton className="h-8 w-20" />
+        <div className="border rounded-lg overflow-hidden">
+          <table className="w-full text-sm">
+            <thead className="bg-muted/50 border-b">
+              <tr>
+                {['Organização', 'Vencimento', 'Valor', 'Status', 'Pago em', 'Ações'].map((h) => (
+                  <th key={h} className="text-left px-4 py-3 font-medium">{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {Array.from({ length: 5 }).map((_, i) => (
+                <tr key={i} className="border-b last:border-0">
+                  {Array.from({ length: 6 }).map((_, j) => (
+                    <td key={j} className="px-4 py-3"><Skeleton className="h-4 w-full" /></td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-4">

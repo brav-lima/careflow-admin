@@ -1,5 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AdminAuthProvider } from '@/contexts/AdminAuthContext'
+import { ToastProvider } from '@/contexts/ToastContext'
+import { Toaster } from '@/components/ui/toast'
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute'
 import { AdminLayout } from '@/components/layout/AdminLayout'
 import { LoginPage } from '@/pages/Login'
@@ -13,6 +15,7 @@ import { InvoicesPage } from '@/pages/Invoices'
 export default function App() {
   return (
     <BrowserRouter>
+      <ToastProvider>
       <AdminAuthProvider>
         <Routes>
           <Route path="/login" element={<LoginPage />} />
@@ -35,6 +38,8 @@ export default function App() {
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Routes>
       </AdminAuthProvider>
+      <Toaster />
+      </ToastProvider>
     </BrowserRouter>
   )
 }

@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom'
-import { LayoutDashboard, Building2, CreditCard, Receipt, FileText, Settings } from 'lucide-react'
+import { LayoutDashboard, Building2, CreditCard, FileText, Settings } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 const navItems = [

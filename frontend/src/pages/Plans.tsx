@@ -3,6 +3,8 @@ import { api } from '@/lib/api'
 import { formatCurrency } from '@/lib/utils'
 import type { Plan } from '@/types/admin'
 import { Check, X } from 'lucide-react'
+import { Skeleton } from '@/components/ui/skeleton'
+import { PlanFormModal } from '@/components/plans/PlanFormModal'
 
 export function PlansPage() {
   const { data: plans, isLoading } = useQuery<Plan[]>({
@@ -10,11 +12,34 @@ export function PlansPage() {
     queryFn: () => api.get('/plans').then((r) => r.data),
   })
 
-  if (isLoading) return <div className="text-muted-foreground text-sm">Carregando...</div>
+  if (isLoading) {
+    return (
+      <div className="space-y-4">
+        <Skeleton className="h-8 w-20" />
+        <div className="grid md:grid-cols-3 gap-4">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <div key={i} className="bg-card border rounded-lg p-5 space-y-4">
+              <div className="space-y-2">
+                <Skeleton className="h-5 w-32" />
+                <Skeleton className="h-8 w-24" />
+              </div>
+              <div className="space-y-2">
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-4 w-full" />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-4">
-      <h1 className="text-2xl font-bold">Planos</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold">Planos</h1>
+        <PlanFormModal />
+      </div>
 
       <div className="grid md:grid-cols-3 gap-4">
         {plans?.map((plan) => (
@@ -27,13 +52,16 @@ export function PlansPage() {
                   <span className="text-sm font-normal text-muted-foreground">/mês</span>
                 </p>
               </div>
-              <span
-                className={`text-xs px-2 py-1 rounded-full ${
-                  plan.isActive ? 'bg-green-100 text-green-700' : 'bg-muted text-muted-foreground'
-                }`}
-              >
-                {plan.isActive ? 'Ativo' : 'Inativo'}
-              </span>
+              <div className="flex items-center gap-2">
+                <span
+                  className={`text-xs px-2 py-1 rounded-full ${
+                    plan.isActive ? 'bg-green-100 text-green-700' : 'bg-muted text-muted-foreground'
+                  }`}
+                >
+                  {plan.isActive ? 'Ativo' : 'Inativo'}
+                </span>
+                <PlanFormModal plan={plan} />
+              </div>
             </div>
 
             <dl className="space-y-1 text-sm">

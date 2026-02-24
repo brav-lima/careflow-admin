@@ -79,13 +79,20 @@ export class ClinicApiService {
     return res.json() as Promise<ClinicSummary[]>
   }
 
-  async updateClinicAccess(clinicId: string, status: ClinicAccessStatus): Promise<void> {
-    this.logger.log(`Updating clinic ${clinicId} access → ${status}`)
+  async updateClinicAccess(
+    clinicId: string,
+    status: ClinicAccessStatus,
+    limits?: { maxUsers: number; maxPatients: number },
+  ): Promise<void> {
+    this.logger.log(
+      `Updating clinic ${clinicId} access → ${status}` +
+        (limits ? ` (maxUsers=${limits.maxUsers}, maxPatients=${limits.maxPatients})` : ''),
+    )
 
     const res = await fetch(`${this.baseUrl}/internal/clinics/${clinicId}/access`, {
       method: 'PATCH',
       headers: this.headers,
-      body: JSON.stringify({ status }),
+      body: JSON.stringify({ status, ...limits }),
     }).catch(() => {
       throw new ServiceUnavailableException('careflow API indisponível')
     })

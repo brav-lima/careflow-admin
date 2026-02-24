@@ -4,6 +4,8 @@ import { api } from '@/lib/api'
 import { formatDate, formatCNPJ } from '@/lib/utils'
 import type { Organization, OrgStatus, PaginatedResponse } from '@/types/admin'
 import { useState } from 'react'
+import { Skeleton } from '@/components/ui/skeleton'
+import { CreateOrganizationModal } from '@/components/organizations/CreateOrganizationModal'
 
 const statusLabel: Record<OrgStatus, { label: string; className: string }> = {
   ACTIVE: { label: 'Ativa', className: 'bg-green-100 text-green-700' },
@@ -27,6 +29,7 @@ export function OrganizationsPage() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">Organizações</h1>
+        <CreateOrganizationModal />
       </div>
 
       <div className="flex gap-3">
@@ -50,7 +53,28 @@ export function OrganizationsPage() {
       </div>
 
       {isLoading ? (
-        <div className="text-muted-foreground text-sm">Carregando...</div>
+        <div className="border rounded-lg overflow-hidden">
+          <table className="w-full text-sm">
+            <thead className="bg-muted/50 border-b">
+              <tr>
+                {['Nome', 'CNPJ', 'Email', 'Status', 'Cadastro'].map((h) => (
+                  <th key={h} className="text-left px-4 py-3 font-medium">{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {Array.from({ length: 5 }).map((_, i) => (
+                <tr key={i} className="border-b last:border-0">
+                  {Array.from({ length: 5 }).map((_, j) => (
+                    <td key={j} className="px-4 py-3">
+                      <Skeleton className="h-4 w-full" />
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       ) : (
         <div className="border rounded-lg overflow-hidden">
           <table className="w-full text-sm">

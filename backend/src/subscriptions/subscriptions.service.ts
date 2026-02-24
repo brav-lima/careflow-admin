@@ -1,10 +1,14 @@
 import { Injectable, NotFoundException } from '@nestjs/common'
 import { PrismaService } from '../prisma/prisma.service'
+import { ClinicApiService } from '../clinic-api/clinic-api.service'
 import { CreateSubscriptionDto } from './dto/create-subscription.dto'
 
 @Injectable()
 export class SubscriptionsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly clinicApi: ClinicApiService,
+  ) {}
 
   findAll(orgId?: string, status?: string) {
     return this.prisma.subscription.findMany({
@@ -26,8 +30,8 @@ export class SubscriptionsService {
     return sub
   }
 
-  create(dto: CreateSubscriptionDto) {
-    return this.prisma.subscription.create({
+  async create(dto: CreateSubscriptionDto) {
+    const subscription = await this.prisma.subscription.create({
       data: {
         organizationId: dto.organizationId,
         planId: dto.planId,
@@ -35,8 +39,22 @@ export class SubscriptionsService {
         startDate: new Date(),
         trialEndsAt: dto.trialEndsAt ? new Date(dto.trialEndsAt) : null,
       },
-      include: { plan: true },
+      include: { plan: true, organization: true },
     })
+
+    // Propaga limites do plano ao careflow-ui
+    if (subscription.organization.clinicExternalId) {
+      await this.clinicApi.updateClinicAccess(
+        subscription.organization.clinicExternalId,
+        'ACTIVE',
+        {
+          maxUsers: subscription.plan.maxUsers,
+          maxPatients: subscription.plan.maxPatients,
+        },
+      )
+    }
+
+    return subscription
   }
 
   async cancel(id: string) {

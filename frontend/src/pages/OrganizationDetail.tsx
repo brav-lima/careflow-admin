@@ -1,12 +1,23 @@
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useParams, Link } from 'react-router-dom'
 import { api } from '@/lib/api'
-import { formatDate, formatCNPJ, formatCurrency } from '@/lib/utils'
-import type { Organization, Subscription, Invoice } from '@/types/admin'
+import { formatDate, formatCNPJ, formatCurrency, getErrorMessage } from '@/lib/utils'
+import type { Organization, OrgStatus, Subscription, Invoice } from '@/types/admin'
 import { ArrowLeft } from 'lucide-react'
+import { Skeleton } from '@/components/ui/skeleton'
+import { Button } from '@/components/ui/button'
+import { useToast } from '@/contexts/ToastContext'
+
+const statusLabel: Record<OrgStatus, { label: string; className: string }> = {
+  ACTIVE: { label: 'Ativa', className: 'bg-green-100 text-green-700' },
+  SUSPENDED: { label: 'Suspensa', className: 'bg-yellow-100 text-yellow-700' },
+  CANCELED: { label: 'Cancelada', className: 'bg-red-100 text-red-700' },
+}
 
 export function OrganizationDetailPage() {
   const { id } = useParams<{ id: string }>()
+  const queryClient = useQueryClient()
+  const { toast } = useToast()
 
   const { data: org } = useQuery<Organization>({
     queryKey: ['organization', id],
@@ -30,7 +41,36 @@ export function OrganizationDetailPage() {
     enabled: !!activeSubscription,
   })
 
-  if (!org) return <div className="text-muted-foreground text-sm">Carregando...</div>
+  const changeStatus = useMutation({
+    mutationFn: (status: OrgStatus) => api.patch(`/organizations/${id}/status`, { status }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['organization', id] })
+      queryClient.invalidateQueries({ queryKey: ['organizations'] })
+      toast.success('Status da organização atualizado')
+    },
+    onError: (err) => toast.error(getErrorMessage(err)),
+  })
+
+  if (!org) {
+    return (
+      <div className="space-y-6 max-w-4xl">
+        <div className="flex items-center gap-3">
+          <Skeleton className="h-4 w-4" />
+          <Skeleton className="h-8 w-48" />
+        </div>
+        <div className="grid grid-cols-2 gap-4">
+          {[0, 1].map((i) => (
+            <div key={i} className="bg-card border rounded-lg p-4 space-y-3">
+              <Skeleton className="h-4 w-32" />
+              {Array.from({ length: 5 }).map((_, j) => (
+                <Skeleton key={j} className="h-4 w-full" />
+              ))}
+            </div>
+          ))}
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-6 max-w-4xl">
@@ -57,15 +97,51 @@ export function OrganizationDetailPage() {
               <dt className="text-muted-foreground">Telefone</dt>
               <dd>{org.phone ?? '—'}</dd>
             </div>
-            <div className="flex justify-between">
+            <div className="flex justify-between items-center">
               <dt className="text-muted-foreground">Status</dt>
-              <dd>{org.status}</dd>
+              <dd>
+                <span className={`text-xs px-2 py-1 rounded-full font-medium ${statusLabel[org.status].className}`}>
+                  {statusLabel[org.status].label}
+                </span>
+              </dd>
             </div>
             <div className="flex justify-between">
               <dt className="text-muted-foreground">Cadastro</dt>
               <dd>{formatDate(org.createdAt)}</dd>
             </div>
           </dl>
+
+          {org.status !== 'CANCELED' && (
+            <div className="flex gap-2 pt-2 border-t">
+              {org.status === 'ACTIVE' && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={changeStatus.isPending}
+                  onClick={() => changeStatus.mutate('SUSPENDED')}
+                >
+                  Suspender
+                </Button>
+              )}
+              {org.status === 'SUSPENDED' && (
+                <Button
+                  size="sm"
+                  disabled={changeStatus.isPending}
+                  onClick={() => changeStatus.mutate('ACTIVE')}
+                >
+                  Reativar
+                </Button>
+              )}
+              <Button
+                variant="destructive"
+                size="sm"
+                disabled={changeStatus.isPending}
+                onClick={() => changeStatus.mutate('CANCELED')}
+              >
+                Cancelar
+              </Button>
+            </div>
+          )}
         </div>
 
         {activeSubscription && (

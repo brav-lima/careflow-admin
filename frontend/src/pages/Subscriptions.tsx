@@ -2,6 +2,8 @@ import { useQuery } from '@tanstack/react-query'
 import { api } from '@/lib/api'
 import { formatDate, formatCurrency } from '@/lib/utils'
 import type { Subscription, SubscriptionStatus } from '@/types/admin'
+import { Skeleton } from '@/components/ui/skeleton'
+import { CreateSubscriptionModal } from '@/components/subscriptions/CreateSubscriptionModal'
 
 const statusLabel: Record<SubscriptionStatus, { label: string; className: string }> = {
   ACTIVE: { label: 'Ativa', className: 'bg-green-100 text-green-700' },
@@ -16,11 +18,40 @@ export function SubscriptionsPage() {
     queryFn: () => api.get('/subscriptions').then((r) => r.data),
   })
 
-  if (isLoading) return <div className="text-muted-foreground text-sm">Carregando...</div>
+  if (isLoading) {
+    return (
+      <div className="space-y-4">
+        <Skeleton className="h-8 w-28" />
+        <div className="border rounded-lg overflow-hidden">
+          <table className="w-full text-sm">
+            <thead className="bg-muted/50 border-b">
+              <tr>
+                {['Organização', 'Plano', 'Valor', 'Status', 'Início', 'Trial até'].map((h) => (
+                  <th key={h} className="text-left px-4 py-3 font-medium">{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {Array.from({ length: 5 }).map((_, i) => (
+                <tr key={i} className="border-b last:border-0">
+                  {Array.from({ length: 6 }).map((_, j) => (
+                    <td key={j} className="px-4 py-3"><Skeleton className="h-4 w-full" /></td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-4">
-      <h1 className="text-2xl font-bold">Assinaturas</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold">Assinaturas</h1>
+        <CreateSubscriptionModal />
+      </div>
 
       <div className="border rounded-lg overflow-hidden">
         <table className="w-full text-sm">

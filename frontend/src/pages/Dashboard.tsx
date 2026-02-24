@@ -3,6 +3,7 @@ import { api } from '@/lib/api'
 import { formatCurrency } from '@/lib/utils'
 import type { MetricsSummary } from '@/types/admin'
 import { TrendingUp, Building2, Clock, AlertTriangle, Ban } from 'lucide-react'
+import { Skeleton } from '@/components/ui/skeleton'
 
 export function DashboardPage() {
   const { data, isLoading } = useQuery<MetricsSummary>({
@@ -10,7 +11,21 @@ export function DashboardPage() {
     queryFn: () => api.get('/metrics/summary').then((r) => r.data),
   })
 
-  if (isLoading) return <div className="text-muted-foreground text-sm">Carregando...</div>
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <Skeleton className="h-8 w-32" />
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <div key={i} className="bg-card border rounded-lg p-4 space-y-3">
+              <Skeleton className="h-3 w-24" />
+              <Skeleton className="h-8 w-16" />
+            </div>
+          ))}
+        </div>
+      </div>
+    )
+  }
 
   const cards = [
     {
