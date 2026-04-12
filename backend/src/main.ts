@@ -2,6 +2,8 @@ import { NestFactory } from '@nestjs/core'
 import { ValidationPipe } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger'
+import * as cookieParser from 'cookie-parser'
+import helmet from 'helmet'
 import { AppModule } from './app.module'
 
 async function bootstrap() {
@@ -11,6 +13,8 @@ async function bootstrap() {
   const port = config.get<number>('PORT', 3001)
   const corsOrigin = config.get<string>('CORS_ORIGIN', 'http://localhost:8081')
 
+  app.use(helmet())
+  app.use(cookieParser())
   app.enableCors({ origin: corsOrigin, credentials: true })
 
   app.useGlobalPipes(

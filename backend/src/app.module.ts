@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common'
 import { ConfigModule } from '@nestjs/config'
+import { ThrottlerModule } from '@nestjs/throttler'
 import { PrismaModule } from './prisma/prisma.module'
 import { AuthModule } from './auth/auth.module'
 import { OrganizationsModule } from './organizations/organizations.module'
@@ -16,6 +17,7 @@ import { ClinicApiModule } from './clinic-api/clinic-api.module'
       // dotenvx já injeta as variáveis no processo antes do NestJS iniciar
       ignoreEnvFile: true,
     }),
+    ThrottlerModule.forRoot([{ ttl: 60000, limit: 100 }]),
     PrismaModule,
     ClinicApiModule,
     AuthModule,

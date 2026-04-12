@@ -40,15 +40,26 @@ export class ClinicApiService {
     }
   }
 
+  private async fetchWithTimeout(url: string, options: RequestInit, timeoutMs = 5000): Promise<Response> {
+    const controller = new AbortController()
+    const timeout = setTimeout(() => controller.abort(), timeoutMs)
+    try {
+      const res = await fetch(url, { ...options, signal: controller.signal })
+      return res
+    } catch {
+      throw new ServiceUnavailableException('careflow API indisponível')
+    } finally {
+      clearTimeout(timeout)
+    }
+  }
+
   async createClinic(payload: CreateClinicPayload): Promise<CreateClinicResponse> {
     this.logger.log(`Creating clinic: ${payload.name}`)
 
-    const res = await fetch(`${this.baseUrl}/internal/clinics`, {
+    const res = await this.fetchWithTimeout(`${this.baseUrl}/internal/clinics`, {
       method: 'POST',
       headers: this.headers,
       body: JSON.stringify(payload),
-    }).catch(() => {
-      throw new ServiceUnavailableException('careflow API indisponível')
     })
 
     if (!res.ok) {
@@ -63,11 +74,9 @@ export class ClinicApiService {
   async listClinics(): Promise<ClinicSummary[]> {
     this.logger.log('Listing clinics from careflow')
 
-    const res = await fetch(`${this.baseUrl}/internal/clinics`, {
+    const res = await this.fetchWithTimeout(`${this.baseUrl}/internal/clinics`, {
       method: 'GET',
       headers: this.headers,
-    }).catch(() => {
-      throw new ServiceUnavailableException('careflow API indisponível')
     })
 
     if (!res.ok) {
@@ -89,12 +98,10 @@ export class ClinicApiService {
         (limits ? ` (maxUsers=${limits.maxUsers}, maxPatients=${limits.maxPatients})` : ''),
     )
 
-    const res = await fetch(`${this.baseUrl}/internal/clinics/${clinicId}/access`, {
+    const res = await this.fetchWithTimeout(`${this.baseUrl}/internal/clinics/${clinicId}/access`, {
       method: 'PATCH',
       headers: this.headers,
       body: JSON.stringify({ status, ...limits }),
-    }).catch(() => {
-      throw new ServiceUnavailableException('careflow API indisponível')
     })
 
     if (!res.ok) {

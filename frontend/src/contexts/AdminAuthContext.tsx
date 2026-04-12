@@ -16,25 +16,21 @@ export function AdminAuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    const stored = localStorage.getItem('admin_user')
-    const token = localStorage.getItem('admin_token')
-    if (stored && token) {
-      setUser(JSON.parse(stored))
-    }
-    setIsLoading(false)
+    api.get<AdminUser>('/auth/me')
+      .then(({ data }) => setUser(data))
+      .catch(() => setUser(null))
+      .finally(() => setIsLoading(false))
   }, [])
 
   const login = async (email: string, password: string) => {
     const { data } = await api.post('/auth/login', { email, password })
-    localStorage.setItem('admin_token', data.accessToken)
-    localStorage.setItem('admin_user', JSON.stringify(data.user))
     setUser(data.user)
   }
 
-  const logout = () => {
-    localStorage.removeItem('admin_token')
-    localStorage.removeItem('admin_user')
+  const logout = async () => {
+    await api.post('/auth/logout').catch(() => null)
     setUser(null)
+    window.location.href = '/login'
   }
 
   return (
