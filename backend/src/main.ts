@@ -13,6 +13,10 @@ async function bootstrap() {
   const port = config.get<number>('PORT', 3001)
   const corsOrigin = config.get<string>('CORS_ORIGIN', 'http://localhost:8081')
 
+  if (process.env.NODE_ENV === 'production' && (!corsOrigin || corsOrigin.includes('localhost'))) {
+    throw new Error('CORS_ORIGIN must be set to a production domain in production environment')
+  }
+
   app.use(helmet())
   app.use(cookieParser())
   app.enableCors({ origin: corsOrigin, credentials: true })
