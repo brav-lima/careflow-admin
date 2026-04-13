@@ -33,6 +33,9 @@ export class ClinicApiService {
     return this.config.getOrThrow<string>('CLINIC_API_URL')
   }
 
+  // CLINIC_INTERNAL_API_KEY is a static shared secret. Rotate every 90 days or
+  // immediately if compromised. See .env.example for the rotation procedure.
+  // Future improvement: replace with short-lived machine-to-machine JWT tokens.
   private get headers(): Record<string, string> {
     return {
       'Content-Type': 'application/json',
