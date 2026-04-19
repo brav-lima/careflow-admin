@@ -18,7 +18,7 @@ export interface Organization {
   email: string
   phone: string | null
   status: OrgStatus
-  clinicDbId: string | null
+  clinicExternalId: string | null
   createdAt: string
   updatedAt: string
 }

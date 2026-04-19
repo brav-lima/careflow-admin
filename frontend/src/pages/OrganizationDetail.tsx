@@ -7,6 +7,7 @@ import { ArrowLeft } from 'lucide-react'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Button } from '@/components/ui/button'
 import { useToast } from '@/contexts/ToastContext'
+import { ClinicUsersSection } from '@/components/organizations/ClinicUsersSection'
 
 const statusLabel: Record<OrgStatus, { label: string; className: string }> = {
   ACTIVE: { label: 'Ativa', className: 'bg-green-100 text-green-700' },
@@ -174,6 +175,8 @@ export function OrganizationDetailPage() {
           </div>
         )}
       </div>
+
+      {org.clinicExternalId && <ClinicUsersSection organizationId={org.id} />}
 
       {invoices && invoices.length > 0 && (
         <div className="bg-card border rounded-lg p-4">

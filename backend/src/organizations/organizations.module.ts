@@ -1,8 +1,11 @@
 import { Module } from '@nestjs/common'
 import { OrganizationsController } from './organizations.controller'
 import { CreateOrganizationUseCase } from './application/create-organization.usecase'
+import { CreateOrganizationWithOwnerUseCase } from './application/create-organization-with-owner.usecase'
 import { UpdateOrgStatusUseCase } from './application/update-status.usecase'
 import { ListOrganizationsUseCase } from './application/list-organizations.usecase'
+import { ResetClinicUserPasswordUseCase } from './application/reset-clinic-user-password.usecase'
+import { ResolveClinicId } from './application/resolve-clinic-id'
 import { PrismaOrganizationRepository } from './infra/prisma-organization.repository'
 import { ORGANIZATION_REPOSITORY } from './domain/organization.repository'
 
@@ -10,8 +13,11 @@ import { ORGANIZATION_REPOSITORY } from './domain/organization.repository'
   controllers: [OrganizationsController],
   providers: [
     CreateOrganizationUseCase,
+    CreateOrganizationWithOwnerUseCase,
     UpdateOrgStatusUseCase,
     ListOrganizationsUseCase,
+    ResetClinicUserPasswordUseCase,
+    ResolveClinicId,
     {
       provide: ORGANIZATION_REPOSITORY,
       useClass: PrismaOrganizationRepository,
