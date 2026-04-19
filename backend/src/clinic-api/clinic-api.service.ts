@@ -99,6 +99,22 @@ export class ClinicApiService {
     }
   }
 
+  // Builds an absolute URL against CLINIC_API_URL while ensuring that no
+  // dynamic segment can escape the configured origin or traverse the path.
+  // Each segment is URI-encoded and the final origin must match the base.
+  private buildUrl(template: TemplateStringsArray, ...segments: string[]): string {
+    let path = template[0]
+    for (let i = 0; i < segments.length; i++) {
+      path += encodeURIComponent(segments[i]) + template[i + 1]
+    }
+    const base = new URL(this.baseUrl)
+    const url = new URL(base.toString().replace(/\/+$/, '') + path)
+    if (url.origin !== base.origin) {
+      throw new ServiceUnavailableException('URL inválida para careflow API')
+    }
+    return url.toString()
+  }
+
   private async fetchWithTimeout(url: string, options: RequestInit, timeoutMs = 5000): Promise<Response> {
     const controller = new AbortController()
     const timeout = setTimeout(() => controller.abort(), timeoutMs)
@@ -115,7 +131,7 @@ export class ClinicApiService {
   async createClinic(payload: CreateClinicPayload): Promise<CreateClinicResponse> {
     this.logger.log(`Creating clinic: ${payload.name}`)
 
-    const res = await this.fetchWithTimeout(`${this.baseUrl}/api/internal/clinics`, {
+    const res = await this.fetchWithTimeout(this.buildUrl`/api/internal/clinics`, {
       method: 'POST',
       headers: this.headers,
       body: JSON.stringify(payload),
@@ -133,7 +149,7 @@ export class ClinicApiService {
   async listClinics(): Promise<ClinicSummary[]> {
     this.logger.log('Listing clinics from careflow')
 
-    const res = await this.fetchWithTimeout(`${this.baseUrl}/api/internal/clinics`, {
+    const res = await this.fetchWithTimeout(this.buildUrl`/api/internal/clinics`, {
       method: 'GET',
       headers: this.headers,
     })
@@ -157,7 +173,7 @@ export class ClinicApiService {
         (limits ? ` (maxUsers=${limits.maxUsers}, maxPatients=${limits.maxPatients})` : ''),
     )
 
-    const res = await this.fetchWithTimeout(`${this.baseUrl}/api/internal/clinics/${clinicId}/access`, {
+    const res = await this.fetchWithTimeout(this.buildUrl`/api/internal/clinics/${clinicId}/access`, {
       method: 'PATCH',
       headers: this.headers,
       body: JSON.stringify({ status, ...limits }),
@@ -173,7 +189,7 @@ export class ClinicApiService {
   async upsertPerson(payload: UpsertPersonPayload): Promise<UpsertPersonResponse> {
     this.logger.log(`Upserting person cpf=${payload.cpf}`)
 
-    const res = await this.fetchWithTimeout(`${this.baseUrl}/api/internal/persons`, {
+    const res = await this.fetchWithTimeout(this.buildUrl`/api/internal/persons`, {
       method: 'POST',
       headers: this.headers,
       body: JSON.stringify(payload),
@@ -195,7 +211,7 @@ export class ClinicApiService {
     this.logger.log(`Linking person ${payload.personId} → clinic ${clinicId} (role=${payload.role ?? 'ADMIN'})`)
 
     const res = await this.fetchWithTimeout(
-      `${this.baseUrl}/api/internal/clinics/${clinicId}/users`,
+      this.buildUrl`/api/internal/clinics/${clinicId}/users`,
       {
         method: 'POST',
         headers: this.headers,
@@ -216,7 +232,7 @@ export class ClinicApiService {
     this.logger.log(`Listing users of clinic ${clinicId}`)
 
     const res = await this.fetchWithTimeout(
-      `${this.baseUrl}/api/internal/clinics/${clinicId}/users`,
+      this.buildUrl`/api/internal/clinics/${clinicId}/users`,
       { method: 'GET', headers: this.headers },
     )
 
@@ -237,7 +253,7 @@ export class ClinicApiService {
     this.logger.log(`Updating clinic user ${organizationUserId} (clinic=${clinicId})`)
 
     const res = await this.fetchWithTimeout(
-      `${this.baseUrl}/api/internal/clinics/${clinicId}/users/${organizationUserId}`,
+      this.buildUrl`/api/internal/clinics/${clinicId}/users/${organizationUserId}`,
       { method: 'PATCH', headers: this.headers, body: JSON.stringify(payload) },
     )
 
@@ -258,7 +274,7 @@ export class ClinicApiService {
     this.logger.log(`Resetting password for clinic user ${organizationUserId}`)
 
     const res = await this.fetchWithTimeout(
-      `${this.baseUrl}/api/internal/clinics/${clinicId}/users/${organizationUserId}/reset-password`,
+      this.buildUrl`/api/internal/clinics/${clinicId}/users/${organizationUserId}/reset-password`,
       { method: 'POST', headers: this.headers, body: JSON.stringify({ password }) },
     )
 
