@@ -1,12 +1,13 @@
-FROM node:20-alpine AS builder
+FROM node:20-slim AS builder
+RUN npm install -g bun
 
 WORKDIR /app
 
-COPY package*.json ./
-RUN npm ci
+COPY package.json bun.lock ./
+RUN bun install --frozen-lockfile
 
 COPY . .
-RUN npm run build
+RUN bun run build
 
 FROM nginx:alpine AS runner
 

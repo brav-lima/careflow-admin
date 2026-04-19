@@ -23,6 +23,62 @@ export interface ClinicSummary {
   accessStatus: 'ACTIVE' | 'BLOCKED'
 }
 
+export interface UpsertPersonPayload {
+  cpf: string
+  name: string
+  email: string
+  phone?: string
+  password: string
+}
+
+export interface UpsertPersonResponse {
+  person: {
+    personId: string
+    cpf: string
+    name: string
+    email: string
+    phone: string | null
+    active: boolean
+  }
+  reused: boolean
+}
+
+export type ClinicUserRole = 'ADMIN' | 'PROFESSIONAL' | 'RECEPTIONIST'
+
+export interface LinkClinicUserPayload {
+  personId: string
+  role?: ClinicUserRole
+}
+
+export interface LinkClinicUserResponse {
+  organizationUserId: string
+  reused: boolean
+}
+
+export interface ClinicUserSummary {
+  organizationUserId: string
+  personId: string
+  cpf: string
+  name: string
+  email: string
+  phone: string | null
+  role: ClinicUserRole
+  linkActive: boolean
+  personActive: boolean
+  createdAt: string
+}
+
+export interface UpdateClinicUserPayload {
+  active?: boolean
+  role?: ClinicUserRole
+}
+
+export interface UpdateClinicUserResponse {
+  organizationUserId: string
+  active: boolean
+  role: ClinicUserRole
+}
+
 @Injectable()
 export class ClinicApiService {
   private readonly logger = new Logger(ClinicApiService.name)
@@ -59,7 +115,7 @@ export class ClinicApiService {
   async createClinic(payload: CreateClinicPayload): Promise<CreateClinicResponse> {
     this.logger.log(`Creating clinic: ${payload.name}`)
 
-    const res = await this.fetchWithTimeout(`${this.baseUrl}/internal/clinics`, {
+    const res = await this.fetchWithTimeout(`${this.baseUrl}/api/internal/clinics`, {
       method: 'POST',
       headers: this.headers,
       body: JSON.stringify(payload),
@@ -77,7 +133,7 @@ export class ClinicApiService {
   async listClinics(): Promise<ClinicSummary[]> {
     this.logger.log('Listing clinics from careflow')
 
-    const res = await this.fetchWithTimeout(`${this.baseUrl}/internal/clinics`, {
+    const res = await this.fetchWithTimeout(`${this.baseUrl}/api/internal/clinics`, {
       method: 'GET',
       headers: this.headers,
     })
@@ -101,7 +157,7 @@ export class ClinicApiService {
         (limits ? ` (maxUsers=${limits.maxUsers}, maxPatients=${limits.maxPatients})` : ''),
     )
 
-    const res = await this.fetchWithTimeout(`${this.baseUrl}/internal/clinics/${clinicId}/access`, {
+    const res = await this.fetchWithTimeout(`${this.baseUrl}/api/internal/clinics/${clinicId}/access`, {
       method: 'PATCH',
       headers: this.headers,
       body: JSON.stringify({ status, ...limits }),
@@ -111,6 +167,105 @@ export class ClinicApiService {
       const body = await res.text()
       this.logger.error(`updateClinicAccess failed [${res.status}]: ${body}`)
       throw new ServiceUnavailableException(`Erro ao atualizar acesso no careflow: ${res.status}`)
+    }
+  }
+
+  async upsertPerson(payload: UpsertPersonPayload): Promise<UpsertPersonResponse> {
+    this.logger.log(`Upserting person cpf=${payload.cpf}`)
+
+    const res = await this.fetchWithTimeout(`${this.baseUrl}/api/internal/persons`, {
+      method: 'POST',
+      headers: this.headers,
+      body: JSON.stringify(payload),
+    })
+
+    if (!res.ok) {
+      const body = await res.text()
+      this.logger.error(`upsertPerson failed [${res.status}]: ${body}`)
+      throw new ServiceUnavailableException(`Erro ao registrar responsável no careflow: ${res.status}`)
+    }
+
+    return res.json() as Promise<UpsertPersonResponse>
+  }
+
+  async linkPersonToClinic(
+    clinicId: string,
+    payload: LinkClinicUserPayload,
+  ): Promise<LinkClinicUserResponse> {
+    this.logger.log(`Linking person ${payload.personId} → clinic ${clinicId} (role=${payload.role ?? 'ADMIN'})`)
+
+    const res = await this.fetchWithTimeout(
+      `${this.baseUrl}/api/internal/clinics/${clinicId}/users`,
+      {
+        method: 'POST',
+        headers: this.headers,
+        body: JSON.stringify(payload),
+      },
+    )
+
+    if (!res.ok) {
+      const body = await res.text()
+      this.logger.error(`linkPersonToClinic failed [${res.status}]: ${body}`)
+      throw new ServiceUnavailableException(`Erro ao vincular responsável à clínica: ${res.status}`)
+    }
+
+    return res.json() as Promise<LinkClinicUserResponse>
+  }
+
+  async listClinicUsers(clinicId: string): Promise<ClinicUserSummary[]> {
+    this.logger.log(`Listing users of clinic ${clinicId}`)
+
+    const res = await this.fetchWithTimeout(
+      `${this.baseUrl}/api/internal/clinics/${clinicId}/users`,
+      { method: 'GET', headers: this.headers },
+    )
+
+    if (!res.ok) {
+      const body = await res.text()
+      this.logger.error(`listClinicUsers failed [${res.status}]: ${body}`)
+      throw new ServiceUnavailableException(`Erro ao listar usuários da clínica: ${res.status}`)
+    }
+
+    return res.json() as Promise<ClinicUserSummary[]>
+  }
+
+  async updateClinicUser(
+    clinicId: string,
+    organizationUserId: string,
+    payload: UpdateClinicUserPayload,
+  ): Promise<UpdateClinicUserResponse> {
+    this.logger.log(`Updating clinic user ${organizationUserId} (clinic=${clinicId})`)
+
+    const res = await this.fetchWithTimeout(
+      `${this.baseUrl}/api/internal/clinics/${clinicId}/users/${organizationUserId}`,
+      { method: 'PATCH', headers: this.headers, body: JSON.stringify(payload) },
+    )
+
+    if (!res.ok) {
+      const body = await res.text()
+      this.logger.error(`updateClinicUser failed [${res.status}]: ${body}`)
+      throw new ServiceUnavailableException(`Erro ao atualizar usuário da clínica: ${res.status}`)
+    }
+
+    return res.json() as Promise<UpdateClinicUserResponse>
+  }
+
+  async resetClinicUserPassword(
+    clinicId: string,
+    organizationUserId: string,
+    password: string,
+  ): Promise<void> {
+    this.logger.log(`Resetting password for clinic user ${organizationUserId}`)
+
+    const res = await this.fetchWithTimeout(
+      `${this.baseUrl}/api/internal/clinics/${clinicId}/users/${organizationUserId}/reset-password`,
+      { method: 'POST', headers: this.headers, body: JSON.stringify({ password }) },
+    )
+
+    if (!res.ok) {
+      const body = await res.text()
+      this.logger.error(`resetClinicUserPassword failed [${res.status}]: ${body}`)
+      throw new ServiceUnavailableException(`Erro ao resetar senha: ${res.status}`)
     }
   }
 }
