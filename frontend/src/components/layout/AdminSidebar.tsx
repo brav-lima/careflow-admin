@@ -1,6 +1,7 @@
 import { NavLink } from 'react-router-dom'
 import { LayoutDashboard, Building2, CreditCard, FileText, Settings } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { appVersion, versionTooltip } from '@/lib/version'
 
 const navItems = [
   { to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
@@ -39,7 +40,9 @@ export function AdminSidebar() {
       </nav>
 
       <div className="px-3 py-4 border-t border-sidebar-border">
-        <p className="text-xs text-sidebar-foreground/40 px-3">v0.1.0</p>
+        <p className="text-xs text-sidebar-foreground/40 px-3" title={versionTooltip}>
+          {appVersion}
+        </p>
       </div>
     </aside>
   )

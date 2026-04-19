@@ -9,6 +9,7 @@ import { SubscriptionsModule } from './subscriptions/subscriptions.module'
 import { InvoicesModule } from './invoices/invoices.module'
 import { MetricsModule } from './metrics/metrics.module'
 import { ClinicApiModule } from './clinic-api/clinic-api.module'
+import { VersionModule } from './version/version.module'
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import { ClinicApiModule } from './clinic-api/clinic-api.module'
     SubscriptionsModule,
     InvoicesModule,
     MetricsModule,
+    VersionModule,
   ],
 })
 export class AppModule {}

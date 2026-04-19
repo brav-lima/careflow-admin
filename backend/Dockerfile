@@ -31,6 +31,21 @@ COPY --from=builder /app/prisma ./prisma
 COPY docker-entrypoint.sh ./
 RUN chmod +x docker-entrypoint.sh
 
+# Version identification — read at runtime by GET /api/admin/version.
+# Override via docker build --build-arg APP_VERSION=... GIT_SHA=... BUILT_AT=...
+ARG APP_VERSION=dev
+ARG GIT_SHA=unknown
+ARG BUILT_AT=unknown
+ENV APP_VERSION=$APP_VERSION \
+    GIT_SHA=$GIT_SHA \
+    BUILT_AT=$BUILT_AT
+
+LABEL org.opencontainers.image.title="careflow-admin-api" \
+      org.opencontainers.image.version=$APP_VERSION \
+      org.opencontainers.image.revision=$GIT_SHA \
+      org.opencontainers.image.created=$BUILT_AT \
+      org.opencontainers.image.source="https://github.com/brav-lima/careflow-admin"
+
 EXPOSE 3001
 
 ENTRYPOINT ["./docker-entrypoint.sh"]
