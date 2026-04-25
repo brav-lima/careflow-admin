@@ -3,9 +3,11 @@ import {
   Body, Param, Query, UseGuards,
 } from '@nestjs/common'
 import { ApiBearerAuth, ApiTags, ApiQuery } from '@nestjs/swagger'
+import { Throttle } from '@nestjs/throttler'
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard'
 import { RolesGuard } from '../auth/guards/roles.guard'
 import { Roles } from '../auth/decorators/roles.decorator'
+import { AdminThrottlerGuard } from '../common/guards/admin-throttler.guard'
 import { CreateOrganizationUseCase } from './application/create-organization.usecase'
 import { CreateOrganizationWithOwnerUseCase } from './application/create-organization-with-owner.usecase'
 import { UpdateOrgStatusUseCase } from './application/update-status.usecase'
@@ -116,6 +118,8 @@ export class OrganizationsController {
 
   @Post(':id/users/:organizationUserId/reset-password')
   @Roles('SUPER_ADMIN', 'SUPPORT')
+  @UseGuards(AdminThrottlerGuard)
+  @Throttle({ default: { limit: 5, ttl: 600_000 } })
   resetUserPassword(
     @Param('id') id: string,
     @Param('organizationUserId') organizationUserId: string,
