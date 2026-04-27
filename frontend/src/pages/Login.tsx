@@ -28,7 +28,7 @@ export function LoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-muted/40">
       <div className="w-full max-w-sm bg-card rounded-lg border p-8 shadow-sm">
         <div className="mb-6">
-          <h1 className="text-2xl font-bold">CareFlow Admin</h1>
+          <h1 className="text-2xl font-bold">Pelvi Admin</h1>
           <p className="text-muted-foreground text-sm mt-1">Gestão interna SaaS</p>
         </div>
 
@@ -40,7 +40,7 @@ export function LoginPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="w-full border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-              placeholder="admin@careflow.com.br"
+              placeholder="admin@soupelvi.com.br"
               required
             />
           </div>

@@ -70,7 +70,7 @@ model Organization {
   email      String
   phone      String?
   status     OrgStatus @default(ACTIVE)
-  clinicExternalId String? @map("clinic_external_id") // ID da Clinic no careflow (sem FK cross-db)
+  clinicExternalId String? @map("clinic_external_id") // ID da Clinic no pelvi-ui (sem FK cross-db)
   createdAt  DateTime  @default(now()) @map("created_at")
   updatedAt  DateTime  @updatedAt @map("updated_at")
 

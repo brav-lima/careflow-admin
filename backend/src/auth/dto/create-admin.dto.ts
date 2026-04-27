@@ -7,7 +7,7 @@ export class CreateAdminDto {
   @IsString()
   name: string
 
-  @ApiProperty({ example: 'joao@careflow.com.br' })
+  @ApiProperty({ example: 'joao@soupelvi.com.br' })
   @IsEmail()
   email: string
 

@@ -15,7 +15,7 @@ export function AdminSidebar() {
   return (
     <aside className="w-60 bg-sidebar text-sidebar-foreground flex flex-col">
       <div className="px-6 py-5 border-b border-sidebar-border">
-        <h1 className="text-lg font-semibold text-sidebar-foreground">CareFlow Admin</h1>
+        <h1 className="text-lg font-semibold text-sidebar-foreground">Pelvi Admin</h1>
         <p className="text-xs text-sidebar-foreground/60 mt-0.5">Gestão SaaS</p>
       </div>
 

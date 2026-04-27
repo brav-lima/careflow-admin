@@ -54,11 +54,11 @@ All development MUST follow this process — no exceptions:
 
 ## Overview
 
-CareFlow Admin is a full-stack SaaS admin dashboard for managing clinic organizations, subscription plans, billing, and metrics — the **operator back-office** of the `careflow-ui` clinic product. It consists of a React frontend (`frontend/`) and a NestJS backend (`backend/`) in separate subdirectories.
+Pelvi Admin is a full-stack SaaS admin dashboard for managing clinic organizations, subscription plans, billing, and metrics — the **operator back-office** of the `pelvi-ui` clinic product. It consists of a React frontend (`frontend/`) and a NestJS backend (`backend/`) in separate subdirectories.
 
 **Package manager**: **Bun** (`bun.lock` is the lockfile of record in both `backend/` and `frontend/`). Do not commit `package-lock.json`.
 
-See the parent `C:/Repos/Careflow/CLAUDE.md` for how this project talks to `careflow-ui` (shared `INTERNAL_API_KEY`, no cross-DB FKs — integration is HTTP-only via the `clinic-api/` module).
+See the parent `C:/Repos/Pelvi/CLAUDE.md` for how this project talks to `pelvi-ui` (shared `INTERNAL_API_KEY`, no cross-DB FKs — integration is HTTP-only via the `clinic-api/` module).
 
 ---
 
@@ -96,7 +96,7 @@ Copy `backend/.env.example` to `backend/.env.dev` and populate:
 - `JWT_ADMIN_SECRET` — JWT signing secret
 - `PORT` — Backend port (default 3001)
 - `CORS_ORIGIN` — Frontend URL for CORS (required in production)
-- `CLINIC_API_URL` — Base URL of the careflow-ui clinic API (e.g. `http://localhost:3000`). The admin appends `/api/internal/*` — do **not** include the path prefix in this value.
+- `CLINIC_API_URL` — Base URL of the pelvi-ui clinic API (e.g. `http://localhost:3000`). The admin appends `/api/internal/*` — do **not** include the path prefix in this value.
 - `CLINIC_INTERNAL_API_KEY` — Shared secret for clinic API requests. Must match `INTERNAL_API_KEY` on the clinic side.
 
 ### Docker
@@ -151,7 +151,7 @@ Login issues the cookie server-side; logout clears it.
 
 **Admin roles**: `SUPER_ADMIN`, `FINANCE`, `SUPPORT` — defined in Prisma schema and `types/admin.ts`.
 
-**External integration (`clinic-api/`)**: the `ClinicApiService` is the single seam that talks to the careflow-ui clinic backend over HTTP using the shared `CLINIC_INTERNAL_API_KEY` header. It:
+**External integration (`clinic-api/`)**: the `ClinicApiService` is the single seam that talks to the pelvi-ui clinic backend over HTTP using the shared `CLINIC_INTERNAL_API_KEY` header. It:
 - Appends `/api/internal/*` to `CLINIC_API_URL` — the clinic product sets a `/api` global prefix, so do **not** call `/internal/*` directly.
 - Builds outbound URLs via a `buildUrl` tagged-template helper that `encodeURIComponent`-s every dynamic segment and asserts the final `URL.origin` matches the configured base — this blocks SSRF / path-traversal when ids come from HTTP params.
 - Supported operations: clinic create/list, access update, **person upsert**, **link person to clinic (ADMIN/PROFESSIONAL/RECEPTIONIST)**, **list/update/reset-password clinic users**.
