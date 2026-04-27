@@ -12,7 +12,7 @@ export class ResolveClinicId {
     const org = await this.repo.findById(organizationId)
     if (!org) throw new NotFoundException('Organização não encontrada')
     if (!org.clinicExternalId) {
-      throw new BadRequestException('Organização não está vinculada a uma clínica no careflow')
+      throw new BadRequestException('Organização não está vinculada a uma clínica no pelvi-ui')
     }
     return org.clinicExternalId
   }

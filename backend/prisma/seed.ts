@@ -42,7 +42,7 @@ async function main() {
   console.log(`✅ ${plans.length} planos criados`)
 
   // Super admin inicial
-  const adminEmail = process.env.SEED_ADMIN_EMAIL ?? 'admin@careflow.com.br'
+  const adminEmail = process.env.SEED_ADMIN_EMAIL ?? 'admin@soupelvi.com.br'
   const adminPassword = process.env.SEED_ADMIN_PASSWORD ?? 'changeme123'
 
   const passwordHash = await bcrypt.hash(adminPassword, 12)

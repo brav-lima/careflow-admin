@@ -40,11 +40,11 @@ ENV APP_VERSION=$APP_VERSION \
     GIT_SHA=$GIT_SHA \
     BUILT_AT=$BUILT_AT
 
-LABEL org.opencontainers.image.title="careflow-admin-api" \
+LABEL org.opencontainers.image.title="pelvi-admin-api" \
       org.opencontainers.image.version=$APP_VERSION \
       org.opencontainers.image.revision=$GIT_SHA \
       org.opencontainers.image.created=$BUILT_AT \
-      org.opencontainers.image.source="https://github.com/brav-lima/careflow-admin"
+      org.opencontainers.image.source="https://github.com/brav-lima/pelvi-admin"
 
 EXPOSE 3001
 

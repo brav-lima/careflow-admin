@@ -110,7 +110,7 @@ export class ClinicApiService {
     const base = new URL(this.baseUrl)
     const url = new URL(base.toString().replace(/\/+$/, '') + path)
     if (url.origin !== base.origin) {
-      throw new ServiceUnavailableException('URL inválida para careflow API')
+      throw new ServiceUnavailableException('URL inválida para pelvi API')
     }
     return url.toString()
   }
@@ -122,7 +122,7 @@ export class ClinicApiService {
       const res = await fetch(url, { ...options, signal: controller.signal })
       return res
     } catch {
-      throw new ServiceUnavailableException('careflow API indisponível')
+      throw new ServiceUnavailableException('pelvi API indisponível')
     } finally {
       clearTimeout(timeout)
     }
@@ -140,14 +140,14 @@ export class ClinicApiService {
     if (!res.ok) {
       const body = await res.text()
       this.logger.error(`createClinic failed [${res.status}]: ${body}`)
-      throw new ServiceUnavailableException(`Erro ao criar clínica no careflow: ${res.status}`)
+      throw new ServiceUnavailableException(`Erro ao criar clínica no pelvi: ${res.status}`)
     }
 
     return res.json() as Promise<CreateClinicResponse>
   }
 
   async listClinics(): Promise<ClinicSummary[]> {
-    this.logger.log('Listing clinics from careflow')
+    this.logger.log('Listing clinics from pelvi')
 
     const res = await this.fetchWithTimeout(this.buildUrl`/api/internal/clinics`, {
       method: 'GET',
@@ -157,7 +157,7 @@ export class ClinicApiService {
     if (!res.ok) {
       const body = await res.text()
       this.logger.error(`listClinics failed [${res.status}]: ${body}`)
-      throw new ServiceUnavailableException(`Erro ao listar clínicas do careflow: ${res.status}`)
+      throw new ServiceUnavailableException(`Erro ao listar clínicas do pelvi: ${res.status}`)
     }
 
     return res.json() as Promise<ClinicSummary[]>
@@ -182,7 +182,7 @@ export class ClinicApiService {
     if (!res.ok) {
       const body = await res.text()
       this.logger.error(`updateClinicAccess failed [${res.status}]: ${body}`)
-      throw new ServiceUnavailableException(`Erro ao atualizar acesso no careflow: ${res.status}`)
+      throw new ServiceUnavailableException(`Erro ao atualizar acesso no pelvi: ${res.status}`)
     }
   }
 
@@ -198,7 +198,7 @@ export class ClinicApiService {
     if (!res.ok) {
       const body = await res.text()
       this.logger.error(`upsertPerson failed [${res.status}]: ${body}`)
-      throw new ServiceUnavailableException(`Erro ao registrar responsável no careflow: ${res.status}`)
+      throw new ServiceUnavailableException(`Erro ao registrar responsável no pelvi: ${res.status}`)
     }
 
     return res.json() as Promise<UpsertPersonResponse>

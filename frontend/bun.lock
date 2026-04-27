@@ -3,7 +3,7 @@
   "configVersion": 1,
   "workspaces": {
     "": {
-      "name": "careflow-admin-web",
+      "name": "pelvi-admin-web",
       "dependencies": {
         "@hookform/resolvers": "^3.9.1",
         "@radix-ui/react-avatar": "^1.1.1",

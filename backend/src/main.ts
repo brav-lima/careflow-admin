@@ -35,8 +35,8 @@ async function bootstrap() {
   app.setGlobalPrefix('api/admin')
 
   const swaggerConfig = new DocumentBuilder()
-    .setTitle('CareFlow Admin API')
-    .setDescription('API interna de gestão SaaS do CareFlow')
+    .setTitle('Pelvi Admin API')
+    .setDescription('API interna de gestão SaaS do Pelvi')
     .setVersion('1.0')
     .addBearerAuth()
     .build()

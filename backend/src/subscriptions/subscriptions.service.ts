@@ -42,7 +42,7 @@ export class SubscriptionsService {
       include: { plan: true, organization: true },
     })
 
-    // Propaga limites do plano ao careflow-ui
+    // Propaga limites do plano ao pelvi-ui
     if (subscription.organization.clinicExternalId) {
       await this.clinicApi.updateClinicAccess(
         subscription.organization.clinicExternalId,

@@ -8,7 +8,7 @@ export interface CreateOrganizationInput {
   document: string
   email: string
   phone?: string
-  // Se fornecido, vincula a uma clínica já existente no careflow (não cria nova)
+  // Se fornecido, vincula a uma clínica já existente no pelvi-ui (não cria nova)
   clinicExternalId?: string
 }
 
@@ -29,7 +29,7 @@ export class CreateOrganizationUseCase {
     let clinicExternalId = input.clinicExternalId ?? null
 
     if (!clinicExternalId) {
-      // Cria a clínica no careflow e obtém o ID externo
+      // Cria a clínica no pelvi-ui e obtém o ID externo
       const clinic = await this.clinicApi.createClinic({
         name: input.name,
         document: input.document,

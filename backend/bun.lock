@@ -3,7 +3,7 @@
   "configVersion": 1,
   "workspaces": {
     "": {
-      "name": "careflow-admin-api",
+      "name": "pelvi-admin-api",
       "dependencies": {
         "@nestjs/common": "^11.1.18",
         "@nestjs/config": "^4.0.4",

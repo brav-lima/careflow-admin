@@ -21,7 +21,7 @@ export class CreateOrganizationDto {
   @IsString()
   phone?: string
 
-  @ApiPropertyOptional({ description: 'ID de uma Clinic já existente no careflow (para vincular sem criar nova)' })
+  @ApiPropertyOptional({ description: 'ID de uma Clinic já existente no pelvi-ui (para vincular sem criar nova)' })
   @IsOptional()
   @IsString()
   clinicExternalId?: string
