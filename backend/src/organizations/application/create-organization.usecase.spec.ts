@@ -93,7 +93,7 @@ describe('CreateOrganizationUseCase', () => {
     clinicApi.createClinic.mockResolvedValue({ clinicId: 'clinic-1' } as any)
     repo.create.mockResolvedValue(makeOrg({ phone: null }))
 
-    const { phone: _p, ...inputWithoutPhone } = baseInput
+    const { phone: _phone, ...inputWithoutPhone } = baseInput
     await sut.execute(inputWithoutPhone)
 
     expect(repo.create).toHaveBeenCalledWith(expect.objectContaining({ phone: null }))

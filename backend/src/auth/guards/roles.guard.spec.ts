@@ -1,21 +1,7 @@
 import { ForbiddenException } from '@nestjs/common'
 import { Reflector } from '@nestjs/core'
-import { ExecutionContext } from '@nestjs/common'
 import { RolesGuard } from './roles.guard'
 import { ROLES_KEY } from '../decorators/roles.decorator'
-
-const makeContext = (userRole: string, requiredRoles: string[] | undefined): ExecutionContext => {
-  const reflector = new Reflector()
-  jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(requiredRoles as any)
-
-  return {
-    getHandler: jest.fn(),
-    getClass: jest.fn(),
-    switchToHttp: () => ({
-      getRequest: () => ({ user: { role: userRole } }),
-    }),
-  } as any
-}
 
 describe('RolesGuard', () => {
   let reflector: jest.Mocked<Reflector>
