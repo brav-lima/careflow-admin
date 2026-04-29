@@ -1,0 +1,25 @@
+{
+  "permissions": {
+    "allow": [
+      "Skill(update-config)",
+      "Skill(update-config:*)",
+      "Bash(export PATH=\"$PATH:/c/Program Files/GitHub CLI\")",
+      "Bash(gh project:*)",
+      "Bash(npm install:*)",
+      "Bash(npx tsc:*)",
+      "Bash(./node_modules/.bin/tsc --noEmit)",
+      "Bash(python3 -c ':*)",
+      "Bash(git checkout:*)",
+      "Bash(git pull:*)",
+      "Bash(gh pr create --title 'Validação de CORS em produção' --body ':*)",
+      "Bash(gh pr create --title 'Senha mínima fraca para contas admin' --body ':*)",
+      "Bash(gh pr create --title 'Chave de API estática para Clinic API sem política de rotação' --body ':*)",
+      "Bash(gh pr:*)",
+      "Bash(gh api:*)",
+      "Bash(python -c \"import sys,json; [print\\(w['name'], '-', w['state'], '-', w['path']\\) for w in json.load\\(sys.stdin\\)['workflows']]\")",
+      "Bash(node -e \"const d=require\\('fs'\\).readFileSync\\('/dev/stdin','utf8'\\);const w=JSON.parse\\(d\\).workflows;w.forEach\\(x=>console.log\\(x.name,'|',x.state,'|',x.path\\)\\)\")",
+      "Bash(git:*)",
+      "Bash(bun run *)"
+    ]
+  }
+}
