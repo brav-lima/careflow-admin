@@ -13,7 +13,7 @@ const statusLabel: Record<SubscriptionStatus, { label: string; className: string
 }
 
 export function SubscriptionsPage() {
-  const { data: subscriptions, isLoading } = useQuery<Subscription[]>({
+  const { data: subscriptions, isLoading, error } = useQuery<Subscription[]>({
     queryKey: ['subscriptions'],
     queryFn: () => api.get('/subscriptions').then((r) => r.data),
   })
@@ -42,6 +42,14 @@ export function SubscriptionsPage() {
             </tbody>
           </table>
         </div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="rounded-md bg-red-50 p-4 text-sm text-red-700">
+        Falha ao carregar assinaturas. Tente novamente.
       </div>
     )
   }
