@@ -23,8 +23,20 @@ export class SubscriptionsController {
   @Roles('SUPER_ADMIN', 'FINANCE')
   @ApiQuery({ name: 'orgId', required: false })
   @ApiQuery({ name: 'status', required: false })
-  findAll(@Query('orgId') orgId?: string, @Query('status') status?: string) {
-    return this.subscriptionsService.findAll(orgId, status)
+  @ApiQuery({ name: 'page', required: false, type: Number })
+  @ApiQuery({ name: 'limit', required: false, type: Number })
+  findAll(
+    @Query('orgId') orgId?: string,
+    @Query('status') status?: string,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+  ) {
+    return this.subscriptionsService.findAll(
+      orgId,
+      status,
+      page ? Number(page) : undefined,
+      limit ? Number(limit) : undefined,
+    )
   }
 
   @Get(':id')
