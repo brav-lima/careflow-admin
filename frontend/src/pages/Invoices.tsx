@@ -17,7 +17,7 @@ export function InvoicesPage() {
   const queryClient = useQueryClient()
   const { toast } = useToast()
 
-  const { data: invoicesResp, isLoading } = useQuery<{ data: Invoice[]; total: number }>({
+  const { data: invoicesResp, isLoading, error } = useQuery<{ data: Invoice[]; total: number }>({
     queryKey: ['invoices'],
     queryFn: () => api.get('/invoices').then((r) => r.data),
   })
@@ -65,6 +65,14 @@ export function InvoicesPage() {
             </tbody>
           </table>
         </div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="rounded-md bg-red-50 p-4 text-sm text-red-700">
+        Falha ao carregar faturas. Tente novamente.
       </div>
     )
   }

@@ -6,7 +6,7 @@ import { TrendingUp, Building2, Clock, AlertTriangle, Ban } from 'lucide-react'
 import { Skeleton } from '@/components/ui/skeleton'
 
 export function DashboardPage() {
-  const { data, isLoading } = useQuery<MetricsSummary>({
+  const { data, isLoading, error } = useQuery<MetricsSummary>({
     queryKey: ['metrics-summary'],
     queryFn: () => api.get('/metrics/summary').then((r) => r.data),
   })
@@ -23,6 +23,14 @@ export function DashboardPage() {
             </div>
           ))}
         </div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="rounded-md bg-red-50 p-4 text-sm text-red-700">
+        Falha ao carregar métricas. Tente novamente.
       </div>
     )
   }

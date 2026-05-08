@@ -17,7 +17,7 @@ export function OrganizationsPage() {
   const [search, setSearch] = useState('')
   const [status, setStatus] = useState<OrgStatus | ''>('')
 
-  const { data, isLoading } = useQuery<PaginatedResponse<Organization>>({
+  const { data, isLoading, error } = useQuery<PaginatedResponse<Organization>>({
     queryKey: ['organizations', search, status],
     queryFn: () =>
       api
@@ -51,6 +51,12 @@ export function OrganizationsPage() {
           <option value="CANCELED">Cancelada</option>
         </select>
       </div>
+
+      {error && (
+        <div className="rounded-md bg-red-50 p-4 text-sm text-red-700">
+          Falha ao carregar organizações. Tente novamente.
+        </div>
+      )}
 
       {isLoading ? (
         <div className="border rounded-lg overflow-hidden">
