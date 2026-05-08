@@ -25,13 +25,24 @@ export class InvoicesController {
   @ApiQuery({ name: 'status', required: false })
   @ApiQuery({ name: 'month', required: false, type: Number })
   @ApiQuery({ name: 'year', required: false, type: Number })
+  @ApiQuery({ name: 'page', required: false, type: Number })
+  @ApiQuery({ name: 'limit', required: false, type: Number })
   findAll(
     @Query('subscriptionId') subscriptionId?: string,
     @Query('status') status?: string,
-    @Query('month') month?: number,
-    @Query('year') year?: number,
+    @Query('month') month?: string,
+    @Query('year') year?: string,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
   ) {
-    return this.invoicesService.findAll(subscriptionId, status, Number(month), Number(year))
+    return this.invoicesService.findAll(
+      subscriptionId,
+      status,
+      month ? Number(month) : undefined,
+      year ? Number(year) : undefined,
+      page ? Number(page) : undefined,
+      limit ? Number(limit) : undefined,
+    )
   }
 
   @Get(':id')

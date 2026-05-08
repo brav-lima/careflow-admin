@@ -25,22 +25,24 @@ export function OrganizationDetailPage() {
     queryFn: () => api.get(`/organizations/${id}`).then((r) => r.data),
   })
 
-  const { data: subscriptions } = useQuery<Subscription[]>({
+  const { data: subscriptionsResp } = useQuery<{ data: Subscription[]; total: number }>({
     queryKey: ['subscriptions', id],
     queryFn: () => api.get('/subscriptions', { params: { orgId: id } }).then((r) => r.data),
     enabled: !!id,
   })
+  const subscriptions = subscriptionsResp?.data
 
   const activeSubscription = subscriptions?.find(
     (s) => s.status === 'ACTIVE' || s.status === 'TRIAL',
   )
 
-  const { data: invoices } = useQuery<Invoice[]>({
+  const { data: invoicesResp } = useQuery<{ data: Invoice[]; total: number }>({
     queryKey: ['invoices', activeSubscription?.id],
     queryFn: () =>
       api.get('/invoices', { params: { subscriptionId: activeSubscription!.id } }).then((r) => r.data),
     enabled: !!activeSubscription,
   })
+  const invoices = invoicesResp?.data
 
   const changeStatus = useMutation({
     mutationFn: (status: OrgStatus) => api.patch(`/organizations/${id}/status`, { status }),
