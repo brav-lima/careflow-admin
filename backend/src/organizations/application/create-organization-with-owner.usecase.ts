@@ -2,6 +2,8 @@ import { ConflictException, Inject, Injectable, Logger } from '@nestjs/common'
 import { IOrganizationRepository, ORGANIZATION_REPOSITORY } from '../domain/organization.repository'
 import { Organization } from '../domain/organization.entity'
 import { ClinicApiService } from '../../clinic-api/clinic-api.service'
+import { PrismaService } from '../../prisma/prisma.service'
+import { ResolveTrialPlan } from './resolve-trial-plan'
 import { generateProvisionalPassword } from './provisional-password'
 
 export interface CreateOrganizationWithOwnerInput {
@@ -26,9 +28,16 @@ export interface CreateOrganizationWithOwnerResult {
     email: string
     reused: boolean
   }
+  subscription: {
+    id: string
+    status: string
+    trialEndsAt: Date
+  }
   // Retornado apenas quando a pessoa foi criada agora. UI deve exibir uma única vez.
   provisionalPassword: string | null
 }
+
+const TRIAL_DAYS = 14
 
 @Injectable()
 export class CreateOrganizationWithOwnerUseCase {
@@ -38,6 +47,8 @@ export class CreateOrganizationWithOwnerUseCase {
     @Inject(ORGANIZATION_REPOSITORY)
     private readonly repo: IOrganizationRepository,
     private readonly clinicApi: ClinicApiService,
+    private readonly prisma: PrismaService,
+    private readonly resolveTrialPlan: ResolveTrialPlan,
   ) {}
 
   async execute(input: CreateOrganizationWithOwnerInput): Promise<CreateOrganizationWithOwnerResult> {
@@ -77,10 +88,29 @@ export class CreateOrganizationWithOwnerUseCase {
       clinicExternalId: clinic.clinicId,
     })
 
+    // Toda org nasce com subscription TRIAL de 14 dias
+    const trialPlanId = await this.resolveTrialPlan.planId()
+    const trialEndsAt = new Date(Date.now() + TRIAL_DAYS * 24 * 60 * 60 * 1000)
+
+    const subscription = await this.prisma.subscription.create({
+      data: {
+        organizationId: organization.id,
+        planId: trialPlanId,
+        status: 'TRIAL',
+        startDate: new Date(),
+        trialEndsAt,
+      },
+    })
+
+    // Propaga limites do plano ao pelvi-ui
+    const plan = await this.prisma.plan.findUniqueOrThrow({ where: { id: trialPlanId } })
+    await this.clinicApi.updateClinicAccess(clinic.clinicId, 'ACTIVE', {
+      maxUsers: plan.maxUsers,
+      maxPatients: plan.maxPatients,
+    })
+
     if (personResp.reused) {
-      this.logger.log(
-        `Owner reaproveitado (cpf=${input.owner.cpf}); senha provisória não foi redefinida.`,
-      )
+      this.logger.log(`Owner reaproveitado (cpf=${input.owner.cpf}); senha provisória não foi redefinida.`)
     }
 
     return {
@@ -91,6 +121,11 @@ export class CreateOrganizationWithOwnerUseCase {
         name: personResp.person.name,
         email: personResp.person.email,
         reused: personResp.reused,
+      },
+      subscription: {
+        id: subscription.id,
+        status: subscription.status,
+        trialEndsAt: subscription.trialEndsAt!,
       },
       provisionalPassword: personResp.reused ? null : provisionalPassword,
     }

@@ -6,6 +6,7 @@ import { UpdateOrgStatusUseCase } from './application/update-status.usecase'
 import { ListOrganizationsUseCase } from './application/list-organizations.usecase'
 import { ResetClinicUserPasswordUseCase } from './application/reset-clinic-user-password.usecase'
 import { ResolveClinicId } from './application/resolve-clinic-id'
+import { ResolveTrialPlan } from './application/resolve-trial-plan'
 import { PrismaOrganizationRepository } from './infra/prisma-organization.repository'
 import { ORGANIZATION_REPOSITORY } from './domain/organization.repository'
 
@@ -18,6 +19,7 @@ import { ORGANIZATION_REPOSITORY } from './domain/organization.repository'
     ListOrganizationsUseCase,
     ResetClinicUserPasswordUseCase,
     ResolveClinicId,
+    ResolveTrialPlan,
     {
       provide: ORGANIZATION_REPOSITORY,
       useClass: PrismaOrganizationRepository,

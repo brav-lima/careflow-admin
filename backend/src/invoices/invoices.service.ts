@@ -6,7 +6,16 @@ import { CreateInvoiceDto } from './dto/create-invoice.dto'
 export class InvoicesService {
   constructor(private readonly prisma: PrismaService) {}
 
-  findAll(subscriptionId?: string, status?: string, month?: number, year?: number) {
+  async findAll(
+    subscriptionId?: string,
+    status?: string,
+    month?: number,
+    year?: number,
+    page = 1,
+    limit = 50,
+  ) {
+    const take = Math.min(limit, 100)
+    const skip = (page - 1) * take
     const where: any = {
       ...(subscriptionId && { subscriptionId }),
       ...(status && { status }),
@@ -18,11 +27,18 @@ export class InvoicesService {
       where.dueDate = { gte: start, lte: end }
     }
 
-    return this.prisma.invoice.findMany({
-      where,
-      include: { subscription: { include: { organization: true, plan: true } } },
-      orderBy: { dueDate: 'desc' },
-    })
+    const [data, total] = await this.prisma.$transaction([
+      this.prisma.invoice.findMany({
+        where,
+        include: { subscription: { include: { organization: true, plan: true } } },
+        orderBy: { dueDate: 'desc' },
+        take,
+        skip,
+      }),
+      this.prisma.invoice.count({ where }),
+    ])
+
+    return { data, total, page, limit: take }
   }
 
   async findOne(id: string) {

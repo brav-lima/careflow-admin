@@ -10,15 +10,26 @@ export class SubscriptionsService {
     private readonly clinicApi: ClinicApiService,
   ) {}
 
-  findAll(orgId?: string, status?: string) {
-    return this.prisma.subscription.findMany({
-      where: {
-        ...(orgId && { organizationId: orgId }),
-        ...(status && { status: status as any }),
-      },
-      include: { plan: true, organization: true },
-      orderBy: { createdAt: 'desc' },
-    })
+  async findAll(orgId?: string, status?: string, page = 1, limit = 50) {
+    const take = Math.min(limit, 100)
+    const skip = (page - 1) * take
+    const where = {
+      ...(orgId && { organizationId: orgId }),
+      ...(status && { status: status as any }),
+    }
+
+    const [data, total] = await this.prisma.$transaction([
+      this.prisma.subscription.findMany({
+        where,
+        include: { plan: true, organization: true },
+        orderBy: { createdAt: 'desc' },
+        take,
+        skip,
+      }),
+      this.prisma.subscription.count({ where }),
+    ])
+
+    return { data, total, page, limit: take }
   }
 
   async findOne(id: string) {

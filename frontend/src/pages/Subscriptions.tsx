@@ -13,10 +13,11 @@ const statusLabel: Record<SubscriptionStatus, { label: string; className: string
 }
 
 export function SubscriptionsPage() {
-  const { data: subscriptions, isLoading, error } = useQuery<Subscription[]>({
+  const { data: subscriptionsResp, isLoading, error } = useQuery<{ data: Subscription[]; total: number }>({
     queryKey: ['subscriptions'],
     queryFn: () => api.get('/subscriptions').then((r) => r.data),
   })
+  const subscriptions = subscriptionsResp?.data
 
   if (isLoading) {
     return (

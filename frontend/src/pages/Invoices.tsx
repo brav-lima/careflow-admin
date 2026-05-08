@@ -17,10 +17,11 @@ export function InvoicesPage() {
   const queryClient = useQueryClient()
   const { toast } = useToast()
 
-  const { data: invoices, isLoading, error } = useQuery<Invoice[]>({
+  const { data: invoicesResp, isLoading, error } = useQuery<{ data: Invoice[]; total: number }>({
     queryKey: ['invoices'],
     queryFn: () => api.get('/invoices').then((r) => r.data),
   })
+  const invoices = invoicesResp?.data
 
   const markPaid = useMutation({
     mutationFn: (id: string) => api.patch(`/invoices/${id}/mark-paid`),

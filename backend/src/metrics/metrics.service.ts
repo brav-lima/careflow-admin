@@ -6,35 +6,22 @@ export class MetricsService {
   constructor(private readonly prisma: PrismaService) {}
 
   async getSummary() {
-    const [
-      activeOrgs,
-      trialOrgs,
-      suspendedOrgs,
-      activeSubscriptions,
-      overdueInvoices,
-    ] = await this.prisma.$transaction([
-      this.prisma.organization.count({ where: { status: 'ACTIVE' } }),
-      this.prisma.subscription.count({ where: { status: 'TRIAL' } }),
-      this.prisma.organization.count({ where: { status: 'SUSPENDED' } }),
-      this.prisma.subscription.findMany({
-        where: { status: 'ACTIVE' },
-        include: { plan: { select: { priceMonthly: true } } },
-      }),
-      this.prisma.invoice.count({ where: { status: 'OVERDUE' } }),
-    ])
+    const [activeOrgs, trialOrgs, suspendedOrgs, overdueInvoices, mrrAgg] =
+      await this.prisma.$transaction([
+        this.prisma.organization.count({ where: { status: 'ACTIVE' } }),
+        this.prisma.subscription.count({ where: { status: 'TRIAL' } }),
+        this.prisma.organization.count({ where: { status: 'SUSPENDED' } }),
+        this.prisma.invoice.count({ where: { status: 'OVERDUE' } }),
+        this.prisma.subscription.findMany({
+          where: { status: 'ACTIVE' },
+          select: { plan: { select: { priceMonthly: true } } },
+          take: 10000,
+        }),
+      ])
 
-    const mrr = activeSubscriptions.reduce(
-      (sum, sub) => sum + Number(sub.plan.priceMonthly),
-      0,
-    )
+    const mrr = mrrAgg.reduce((sum, sub) => sum + Number(sub.plan.priceMonthly), 0)
 
-    return {
-      mrr,
-      activeOrgs,
-      trialOrgs,
-      suspendedOrgs,
-      overdueInvoices,
-    }
+    return { mrr, activeOrgs, trialOrgs, suspendedOrgs, overdueInvoices }
   }
 
   async getRevenueByYear(year: number) {
@@ -47,6 +34,7 @@ export class MetricsService {
         },
       },
       select: { amount: true, paidAt: true },
+      take: 10000,
     })
 
     const monthly = Array.from({ length: 12 }, (_, i) => ({
@@ -74,6 +62,7 @@ export class MetricsService {
       where: { createdAt: { gte: ranges[period] } },
       select: { id: true, name: true, status: true, createdAt: true },
       orderBy: { createdAt: 'desc' },
+      take: 500,
     })
   }
 }
