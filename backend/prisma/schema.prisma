@@ -82,6 +82,7 @@ model Organization {
   subscriptions Subscription[]
 
   @@index([status])
+  @@index([clinicExternalId])
   @@map("organizations")
 }
 
@@ -165,5 +166,6 @@ model Invoice {
   @@index([subscriptionId])
   @@index([status])
   @@index([dueDate])
+  @@index([externalReference])
   @@map("invoices")
 }
