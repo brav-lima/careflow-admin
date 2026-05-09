@@ -8,6 +8,7 @@ const makeOrg = (overrides: Partial<Organization> = {}): Organization => ({
   id: 'org-1',
   name: 'Clínica A',
   document: '12345678000100',
+  documentType: 'CNPJ',
   email: 'a@test.com',
   phone: null,
   status: 'ACTIVE',
@@ -66,6 +67,7 @@ describe('CreateOrganizationUseCase', () => {
     expect(clinicApi.createClinic).toHaveBeenCalledWith({
       name: baseInput.name,
       document: baseInput.document,
+      documentType: 'CNPJ',
       email: baseInput.email,
       phone: baseInput.phone,
     })

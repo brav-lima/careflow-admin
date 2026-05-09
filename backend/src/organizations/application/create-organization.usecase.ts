@@ -33,6 +33,7 @@ export class CreateOrganizationUseCase {
       const clinic = await this.clinicApi.createClinic({
         name: input.name,
         document: input.document,
+        documentType: 'CNPJ',
         email: input.email,
         phone: input.phone,
       })
@@ -42,6 +43,7 @@ export class CreateOrganizationUseCase {
     return this.repo.create({
       name: input.name,
       document: input.document,
+      documentType: 'CNPJ',
       email: input.email,
       phone: input.phone ?? null,
       status: 'ACTIVE',
