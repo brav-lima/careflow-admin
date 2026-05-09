@@ -62,14 +62,20 @@ enum OrgStatus {
   CANCELED
 }
 
+enum DocumentType {
+  CNPJ
+  CPF
+}
+
 model Organization {
-  id         String    @id @default(uuid())
-  name       String
-  document   String    @unique // CNPJ
-  email      String
-  phone      String?
-  status     OrgStatus @default(ACTIVE)
-  clinicExternalId String? @map("clinic_external_id") // ID da Clinic no pelvi-ui (sem FK cross-db)
+  id           String       @id @default(uuid())
+  name         String
+  document     String       @unique // CNPJ (14 dígitos) ou CPF (11 dígitos) dependendo de documentType
+  documentType DocumentType @default(CNPJ) @map("document_type")
+  email        String
+  phone        String?
+  status       OrgStatus    @default(ACTIVE)
+  clinicExternalId String?  @map("clinic_external_id") // ID da Clinic no pelvi-ui (sem FK cross-db)
   createdAt  DateTime  @default(now()) @map("created_at")
   updatedAt  DateTime  @updatedAt @map("updated_at")
 
@@ -85,7 +91,7 @@ model Organization {
 
 model Plan {
   id           String   @id @default(uuid())
-  name         String
+  name         String   @unique
   priceMonthly Decimal  @db.Decimal(10, 2) @map("price_monthly")
   maxUsers     Int      @map("max_users")
   maxPatients  Int      @map("max_patients")

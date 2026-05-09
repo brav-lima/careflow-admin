@@ -1,7 +1,9 @@
 import { PrismaClient } from '@prisma/client'
+import { PrismaPg } from '@prisma/adapter-pg'
 import * as bcrypt from 'bcrypt'
 
-const prisma = new PrismaClient()
+const adapter = new PrismaPg({ connectionString: process.env.DATABASE_ADMIN_URL })
+const prisma = new PrismaClient({ adapter })
 
 async function main() {
   console.log('🌱 Seeding admin database...')
@@ -33,7 +35,7 @@ async function main() {
 
   for (const plan of plans) {
     await prisma.plan.upsert({
-      where: { id: plan.name },
+      where: { name: plan.name },
       update: {},
       create: plan,
     })

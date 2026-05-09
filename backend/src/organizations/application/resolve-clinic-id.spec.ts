@@ -7,6 +7,7 @@ const makeOrg = (overrides: Partial<Organization> = {}): Organization => ({
   id: 'org-1',
   name: 'Clínica Teste',
   document: '12345678000100',
+  documentType: 'CNPJ',
   email: 'clinic@test.com',
   phone: null,
   status: 'ACTIVE',

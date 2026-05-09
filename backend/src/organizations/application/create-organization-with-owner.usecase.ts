@@ -7,8 +7,9 @@ import { ResolveTrialPlan } from './resolve-trial-plan'
 import { generateProvisionalPassword } from './provisional-password'
 
 export interface CreateOrganizationWithOwnerInput {
+  organizationType: 'CLINIC_PJ' | 'SOLO_PF'
   name: string
-  document: string
+  document?: string // CNPJ para CLINIC_PJ; omitido para SOLO_PF (usa owner.cpf)
   email: string
   phone?: string
   owner: {
@@ -52,15 +53,24 @@ export class CreateOrganizationWithOwnerUseCase {
   ) {}
 
   async execute(input: CreateOrganizationWithOwnerInput): Promise<CreateOrganizationWithOwnerResult> {
-    const existing = await this.repo.findAll({ search: input.document, limit: 1 })
-    const conflict = existing.data.find((o) => o.document === input.document)
+    const isSolo = input.organizationType === 'SOLO_PF'
+    const document = isSolo ? input.owner.cpf : input.document!
+    const documentType = isSolo ? 'CPF' : 'CNPJ'
+
+    const existing = await this.repo.findAll({ search: document, limit: 1 })
+    const conflict = existing.data.find((o) => o.document === document)
     if (conflict) {
-      throw new ConflictException('Já existe uma organização com este CNPJ')
+      throw new ConflictException(
+        isSolo
+          ? 'Já existe uma organização com este CPF'
+          : 'Já existe uma organização com este CNPJ',
+      )
     }
 
     const clinic = await this.clinicApi.createClinic({
       name: input.name,
-      document: input.document,
+      document,
+      documentType,
       email: input.email,
       phone: input.phone,
     })
@@ -81,14 +91,14 @@ export class CreateOrganizationWithOwnerUseCase {
 
     const organization = await this.repo.create({
       name: input.name,
-      document: input.document,
+      document,
+      documentType,
       email: input.email,
       phone: input.phone ?? null,
       status: 'ACTIVE',
       clinicExternalId: clinic.clinicId,
     })
 
-    // Toda org nasce com subscription TRIAL de 14 dias
     const trialPlanId = await this.resolveTrialPlan.planId()
     const trialEndsAt = new Date(Date.now() + TRIAL_DAYS * 24 * 60 * 60 * 1000)
 
@@ -102,7 +112,6 @@ export class CreateOrganizationWithOwnerUseCase {
       },
     })
 
-    // Propaga limites do plano ao pelvi-ui
     const plan = await this.prisma.plan.findUniqueOrThrow({ where: { id: trialPlanId } })
     await this.clinicApi.updateClinicAccess(clinic.clinicId, 'ACTIVE', {
       maxUsers: plan.maxUsers,
