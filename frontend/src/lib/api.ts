@@ -57,6 +57,12 @@ api.interceptors.response.use(
       window.location.href = '/login'
     }
 
+    if (!error.response) {
+      const friendly = new Error('Sem conexão com o servidor. Verifique sua rede e tente novamente.')
+      ;(friendly as Error & { isNetworkError?: boolean }).isNetworkError = true
+      return Promise.reject(friendly)
+    }
+
     return Promise.reject(error)
   },
 )

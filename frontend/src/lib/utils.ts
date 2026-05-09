@@ -22,6 +22,9 @@ export function formatCPF(cpf: string) {
 }
 
 export function getErrorMessage(error: unknown): string {
+  if (error instanceof Error && (error as Error & { isNetworkError?: boolean }).isNetworkError) {
+    return error.message
+  }
   if (error && typeof error === 'object' && 'response' in error) {
     const response = (error as { response?: { data?: { message?: unknown } } }).response
     const msg = response?.data?.message
