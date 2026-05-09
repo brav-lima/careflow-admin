@@ -1,0 +1,59 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: pelvi-admin-db
+    environment:
+      POSTGRES_DB: pelvi_admin
+      POSTGRES_USER: pelvi
+      POSTGRES_PASSWORD: pelvi
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U pelvi -d pelvi_admin"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build:
+      context: ./backend
+      args:
+        APP_VERSION: ${APP_VERSION:-dev}
+        GIT_SHA: ${GIT_SHA:-unknown}
+        BUILT_AT: ${BUILT_AT:-unknown}
+    container_name: pelvi-admin-api
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_ADMIN_URL: ${DATABASE_ADMIN_URL:-postgresql://pelvi:pelvi@postgres:5432/pelvi_admin}
+      DIRECT_DATABASE_ADMIN_URL: ${DIRECT_DATABASE_ADMIN_URL:-postgresql://pelvi:pelvi@postgres:5432/pelvi_admin}
+      JWT_ADMIN_SECRET: ${JWT_ADMIN_SECRET:-admin-dev-jwt-secret-change-me}
+      JWT_ADMIN_REFRESH_SECRET: ${JWT_ADMIN_REFRESH_SECRET:-admin-dev-refresh-secret-change-me}
+      PORT: 3001
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:8081}
+      NODE_ENV: ${NODE_ENV:-development}
+      CLINIC_API_URL: ${CLINIC_API_URL:-http://localhost:3000}
+      CLINIC_INTERNAL_API_KEY: ${CLINIC_INTERNAL_API_KEY:-shared-internal-api-key-change-me-min-32-chars}
+      SEED_ADMIN_EMAIL: ${SEED_ADMIN_EMAIL:-admin@soupelvi.com.br}
+      SEED_ADMIN_PASSWORD: ${SEED_ADMIN_PASSWORD:-changeme123}
+    ports:
+      - "3001:3001"
+
+  web:
+    build:
+      context: ./frontend
+      args:
+        APP_VERSION: ${APP_VERSION:-dev}
+        GIT_SHA: ${GIT_SHA:-unknown}
+        BUILT_AT: ${BUILT_AT:-unknown}
+    container_name: pelvi-admin-web
+    depends_on:
+      - api
+    ports:
+      - "8081:80"
+
+volumes:
+  postgres_data:

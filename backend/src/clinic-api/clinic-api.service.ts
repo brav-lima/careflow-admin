@@ -5,7 +5,8 @@ export type ClinicAccessStatus = 'ACTIVE' | 'BLOCKED'
 
 export interface CreateClinicPayload {
   name: string
-  document: string // CNPJ
+  document: string // CNPJ (14 dígitos) ou CPF (11 dígitos)
+  documentType: 'CNPJ' | 'CPF'
   email: string
   phone?: string
 }
