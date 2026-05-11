@@ -34,4 +34,4 @@ COPY nginx.conf /etc/nginx/conf.d/default.conf.template
 
 EXPOSE 80
 
-CMD ["/bin/sh", "-c", "export RESOLVER=$(awk '/^nameserver/{print $2; exit}' /etc/resolv.conf) && envsubst '$PORT $RESOLVER $BACKEND_URL' < /etc/nginx/conf.d/default.conf.template > /etc/nginx/conf.d/default.conf && nginx -g 'daemon off;'"]
+CMD ["/bin/sh", "-c", "NAMESERVER=$(awk '/^nameserver/{print $2; exit}' /etc/resolv.conf) && case \"$NAMESERVER\" in *:*) export RESOLVER=\"[$NAMESERVER]\";; *) export RESOLVER=\"$NAMESERVER\";; esac && envsubst '$PORT $RESOLVER $BACKEND_URL' < /etc/nginx/conf.d/default.conf.template > /etc/nginx/conf.d/default.conf && nginx -g 'daemon off;'"]
