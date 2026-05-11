@@ -1,7 +1,9 @@
 import { PrismaClient } from '@prisma/client'
+import { PrismaNeon } from '@prisma/adapter-neon'
 import * as bcrypt from 'bcrypt'
 
-const prisma = new PrismaClient()
+const adapter = new PrismaNeon({ connectionString: process.env.DATABASE_ADMIN_URL! })
+const prisma = new PrismaClient({ adapter })
 
 async function main() {
   console.log('🌱 Seeding admin database...')
