@@ -35,7 +35,8 @@
     "passport": "^0.7.0",
     "passport-jwt": "^4.0.1",
     "reflect-metadata": "^0.2.2",
-    "rxjs": "^7.8.1"
+    "rxjs": "^7.8.1",
+    "ws": "^8.20.0"
   },
   "devDependencies": {
     "@dotenvx/dotenvx": "^1.0.0",
@@ -47,6 +48,7 @@
     "@types/jest": "^30.0.0",
     "@types/node": "^22.0.0",
     "@types/passport-jwt": "^4.0.1",
+    "@types/ws": "^8.18.1",
     "@typescript-eslint/eslint-plugin": "7",
     "@typescript-eslint/parser": "7",
     "eslint": "8",
