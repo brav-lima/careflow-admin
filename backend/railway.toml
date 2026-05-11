@@ -5,6 +5,6 @@ buildCommand = "bun install && bunx prisma generate && bun run build"
 [deploy]
 releaseCommand = "bunx prisma migrate deploy"
 startCommand = "node dist/main"
-healthcheckPath = "/api/admin/version"
+healthcheckPath = "/api/admin/health"
 healthcheckTimeout = 30
 restartPolicyType = "on_failure"
