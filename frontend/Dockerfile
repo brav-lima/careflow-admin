@@ -31,6 +31,7 @@ LABEL org.opencontainers.image.title="pelvi-admin-web" \
 
 COPY --from=builder /app/dist /usr/share/nginx/html
 COPY nginx.conf /etc/nginx/conf.d/default.conf.template
+RUN sed -i 's/worker_processes  auto;/worker_processes 2;/' /etc/nginx/nginx.conf
 
 EXPOSE 80
 
