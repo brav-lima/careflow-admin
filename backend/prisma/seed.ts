@@ -73,8 +73,8 @@ async function main() {
 
   console.log(`✅ Admin criado: ${adminEmail}`)
   if (isDefault) {
-    console.log(`🔑 Senha gerada automaticamente: ${adminPassword}`)
-    console.log('⚠️  Guarde essa senha agora — ela não será exibida novamente!')
+    console.log('🔑 Uma senha aleatória foi gerada automaticamente para o admin.')
+    console.log('⚠️  Defina/rotacione a senha por um canal seguro antes de uso em produção.')
   } else {
     console.log('⚠️  Troque a senha do admin após o primeiro login!')
   }
