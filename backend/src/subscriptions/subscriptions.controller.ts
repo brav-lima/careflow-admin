@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Patch, Body, Param, Query, UseGuards } from '@nestjs/common'
+import { Controller, Get, Post, Patch, Body, Param, ParseUUIDPipe, Query, UseGuards } from '@nestjs/common'
 import { ApiBearerAuth, ApiTags, ApiQuery } from '@nestjs/swagger'
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard'
 import { RolesGuard } from '../auth/guards/roles.guard'
@@ -41,19 +41,19 @@ export class SubscriptionsController {
 
   @Get(':id')
   @Roles('SUPER_ADMIN', 'FINANCE')
-  findOne(@Param('id') id: string) {
+  findOne(@Param('id', ParseUUIDPipe) id: string) {
     return this.subscriptionsService.findOne(id)
   }
 
   @Patch(':id')
   @Roles('SUPER_ADMIN', 'FINANCE')
-  update(@Param('id') id: string, @Body() dto: Partial<CreateSubscriptionDto>) {
+  update(@Param('id', ParseUUIDPipe) id: string, @Body() dto: Partial<CreateSubscriptionDto>) {
     return this.subscriptionsService.update(id, dto)
   }
 
   @Patch(':id/cancel')
   @Roles('SUPER_ADMIN', 'FINANCE')
-  cancel(@Param('id') id: string) {
+  cancel(@Param('id', ParseUUIDPipe) id: string) {
     return this.subscriptionsService.cancel(id)
   }
 }
