@@ -17,11 +17,9 @@ describe('GlobalExceptionFilter', () => {
   })
 
   it('returns the HTTP status and message from HttpException', () => {
-    const statusFn = jest.fn().mockReturnValue({ json: jest.fn() })
+    const statusFn = jest.fn()
     const jsonFn = jest.fn()
-    const host = {
-      switchToHttp: () => ({ getResponse: () => ({ status: statusFn.mockReturnValue({ json: jsonFn }) }) }),
-    }
+    const host = makeHost(statusFn, jsonFn)
 
     filter.catch(new HttpException('Not found', HttpStatus.NOT_FOUND), host as any)
 
@@ -32,11 +30,9 @@ describe('GlobalExceptionFilter', () => {
   })
 
   it('returns 500 and generic message for non-HTTP errors', () => {
-    const statusFn = jest.fn().mockReturnValue({ json: jest.fn() })
+    const statusFn = jest.fn()
     const jsonFn = jest.fn()
-    const host = {
-      switchToHttp: () => ({ getResponse: () => ({ status: statusFn.mockReturnValue({ json: jsonFn }) }) }),
-    }
+    const host = makeHost(statusFn, jsonFn)
 
     filter.catch(new Error('something broke'), host as any)
 
@@ -63,10 +59,9 @@ describe('GlobalExceptionFilter', () => {
   })
 
   it('handles non-Error thrown values (strings, objects)', () => {
-    const statusFn = jest.fn().mockReturnValue({ json: jest.fn() })
-    const host = {
-      switchToHttp: () => ({ getResponse: () => ({ status: statusFn.mockReturnValue({ json: jest.fn() }) }) }),
-    }
+    const statusFn = jest.fn()
+    const jsonFn = jest.fn()
+    const host = makeHost(statusFn, jsonFn)
 
     expect(() => filter.catch('some string error', host as any)).not.toThrow()
     expect(statusFn).toHaveBeenCalledWith(500)
