@@ -1,6 +1,6 @@
 import {
   Controller, Get, Post, Patch, Delete,
-  Body, Param, Query, UseGuards,
+  Body, Param, ParseUUIDPipe, Query, UseGuards,
 } from '@nestjs/common'
 import { ApiBearerAuth, ApiTags, ApiQuery } from '@nestjs/swagger'
 import { Throttle } from '@nestjs/throttler'
@@ -74,25 +74,25 @@ export class OrganizationsController {
 
   @Get(':id')
   @Roles('SUPER_ADMIN', 'SUPPORT')
-  findOne(@Param('id') id: string) {
+  findOne(@Param('id', ParseUUIDPipe) id: string) {
     return this.repo.findById(id)
   }
 
   @Patch(':id')
   @Roles('SUPER_ADMIN', 'SUPPORT')
-  update(@Param('id') id: string, @Body() dto: UpdateOrganizationDto) {
+  update(@Param('id', ParseUUIDPipe) id: string, @Body() dto: UpdateOrganizationDto) {
     return this.repo.update(id, dto)
   }
 
   @Patch(':id/status')
   @Roles('SUPER_ADMIN', 'SUPPORT')
-  updateStatus(@Param('id') id: string, @Body() dto: UpdateOrgStatusDto) {
+  updateStatus(@Param('id', ParseUUIDPipe) id: string, @Body() dto: UpdateOrgStatusDto) {
     return this.updateOrgStatus.execute(id, dto.status)
   }
 
   @Delete(':id')
   @Roles('SUPER_ADMIN')
-  remove(@Param('id') id: string) {
+  remove(@Param('id', ParseUUIDPipe) id: string) {
     return this.repo.delete(id)
   }
 
@@ -100,7 +100,7 @@ export class OrganizationsController {
 
   @Get(':id/users')
   @Roles('SUPER_ADMIN', 'SUPPORT')
-  async listClinicUsers(@Param('id') id: string) {
+  async listClinicUsers(@Param('id', ParseUUIDPipe) id: string) {
     const clinicId = await this.resolveClinicId.byOrganizationId(id)
     return this.clinicApi.listClinicUsers(clinicId)
   }
@@ -108,8 +108,8 @@ export class OrganizationsController {
   @Patch(':id/users/:organizationUserId')
   @Roles('SUPER_ADMIN', 'SUPPORT')
   async updateClinicUser(
-    @Param('id') id: string,
-    @Param('organizationUserId') organizationUserId: string,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Param('organizationUserId', ParseUUIDPipe) organizationUserId: string,
     @Body() dto: UpdateClinicUserDto,
   ) {
     const clinicId = await this.resolveClinicId.byOrganizationId(id)
@@ -121,8 +121,8 @@ export class OrganizationsController {
   @UseGuards(AdminThrottlerGuard)
   @Throttle({ default: { limit: 5, ttl: 600_000 } })
   resetUserPassword(
-    @Param('id') id: string,
-    @Param('organizationUserId') organizationUserId: string,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Param('organizationUserId', ParseUUIDPipe) organizationUserId: string,
   ) {
     return this.resetClinicUserPassword.execute(id, organizationUserId)
   }

@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Patch, Delete, Body, Param, UseGuards } from '@nestjs/common'
+import { Controller, Get, Post, Patch, Delete, Body, Param, ParseUUIDPipe, UseGuards } from '@nestjs/common'
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger'
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard'
 import { RolesGuard } from '../auth/guards/roles.guard'
@@ -26,19 +26,19 @@ export class PlansController {
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
+  findOne(@Param('id', ParseUUIDPipe) id: string) {
     return this.plansService.findOne(id)
   }
 
   @Patch(':id')
   @Roles('SUPER_ADMIN')
-  update(@Param('id') id: string, @Body() dto: UpdatePlanDto) {
+  update(@Param('id', ParseUUIDPipe) id: string, @Body() dto: UpdatePlanDto) {
     return this.plansService.update(id, dto)
   }
 
   @Delete(':id')
   @Roles('SUPER_ADMIN')
-  remove(@Param('id') id: string) {
+  remove(@Param('id', ParseUUIDPipe) id: string) {
     return this.plansService.remove(id)
   }
 }

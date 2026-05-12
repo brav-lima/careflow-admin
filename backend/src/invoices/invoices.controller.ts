@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Patch, Body, Param, Query, UseGuards } from '@nestjs/common'
+import { Controller, Get, Post, Patch, Body, Param, ParseUUIDPipe, Query, UseGuards } from '@nestjs/common'
 import { ApiBearerAuth, ApiTags, ApiQuery } from '@nestjs/swagger'
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard'
 import { RolesGuard } from '../auth/guards/roles.guard'
@@ -47,19 +47,19 @@ export class InvoicesController {
 
   @Get(':id')
   @Roles('SUPER_ADMIN', 'FINANCE')
-  findOne(@Param('id') id: string) {
+  findOne(@Param('id', ParseUUIDPipe) id: string) {
     return this.invoicesService.findOne(id)
   }
 
   @Patch(':id/mark-paid')
   @Roles('SUPER_ADMIN', 'FINANCE')
-  markPaid(@Param('id') id: string) {
+  markPaid(@Param('id', ParseUUIDPipe) id: string) {
     return this.invoicesService.markPaid(id)
   }
 
   @Patch(':id/cancel')
   @Roles('SUPER_ADMIN', 'FINANCE')
-  cancel(@Param('id') id: string) {
+  cancel(@Param('id', ParseUUIDPipe) id: string) {
     return this.invoicesService.cancel(id)
   }
 }
