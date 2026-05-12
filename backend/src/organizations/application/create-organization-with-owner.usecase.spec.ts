@@ -23,10 +23,13 @@ const makeOrg = (overrides: Partial<Organization> = {}): Organization => ({
   ...overrides,
 })
 
-const makeSub = () => ({
+const makeSub = (orgId = 'org-1') => ({
   id: 'sub-1',
+  organizationId: orgId,
+  planId: 'plan-trial-id',
   status: 'TRIAL',
   trialEndsAt: new Date(Date.now() + 14 * 86400000),
+  startDate: new Date(),
 })
 
 const baseInput: CreateOrganizationWithOwnerInput = {
@@ -50,17 +53,30 @@ const personResp = (reused = false) => ({
     cpf: '12345678900',
     name: 'Ana Lima',
     email: 'ana@test.com',
+    phone: null,
+    active: true,
+  },
+})
+
+const makeTx = (orgOverride: Partial<Organization> = {}) => ({
+  organization: {
+    create: jest.fn().mockResolvedValue(makeOrg(orgOverride)),
+  },
+  subscription: {
+    create: jest.fn().mockResolvedValue(makeSub(orgOverride.id ?? 'org-1')),
   },
 })
 
 describe('CreateOrganizationWithOwnerUseCase', () => {
   let repo: jest.Mocked<IOrganizationRepository>
   let clinicApi: jest.Mocked<ClinicApiService>
-  let prisma: jest.Mocked<Pick<PrismaService, 'subscription' | 'plan'>>
+  let prisma: jest.Mocked<Pick<PrismaService, '$transaction' | 'plan'>>
   let resolveTrialPlan: jest.Mocked<ResolveTrialPlan>
   let sut: CreateOrganizationWithOwnerUseCase
+  let tx: ReturnType<typeof makeTx>
 
   beforeEach(() => {
+    tx = makeTx()
     repo = {
       findById: jest.fn(),
       findAll: jest.fn(),
@@ -71,15 +87,15 @@ describe('CreateOrganizationWithOwnerUseCase', () => {
     clinicApi = {
       createClinic: jest.fn(),
       listClinics: jest.fn(),
-      updateClinicAccess: jest.fn(),
+      updateClinicAccess: jest.fn().mockResolvedValue(undefined),
       upsertPerson: jest.fn(),
-      linkPersonToClinic: jest.fn(),
+      linkPersonToClinic: jest.fn().mockResolvedValue(undefined),
       listClinicUsers: jest.fn(),
       updateClinicUser: jest.fn(),
       resetClinicUserPassword: jest.fn(),
     } as any
     prisma = {
-      subscription: { create: jest.fn().mockResolvedValue(makeSub()) } as any,
+      $transaction: jest.fn().mockImplementation(async (fn: (tx: any) => Promise<unknown>) => fn(tx)),
       plan: { findUniqueOrThrow: jest.fn().mockResolvedValue({ maxUsers: 5, maxPatients: 100 }) } as any,
     }
     resolveTrialPlan = { planId: jest.fn().mockResolvedValue('plan-trial-id') } as any
@@ -101,28 +117,29 @@ describe('CreateOrganizationWithOwnerUseCase', () => {
     repo.findAll.mockResolvedValue({ data: [], total: 0 })
     clinicApi.createClinic.mockResolvedValue({ clinicId: 'clinic-new' } as any)
     clinicApi.upsertPerson.mockResolvedValue(personResp(false) as any)
-    clinicApi.linkPersonToClinic.mockResolvedValue(undefined as any)
-    repo.create.mockResolvedValue(makeOrg({ clinicExternalId: 'clinic-new' }))
 
     await sut.execute(baseInput)
 
     expect(clinicApi.createClinic).toHaveBeenCalled()
     expect(clinicApi.upsertPerson).toHaveBeenCalled()
     expect(clinicApi.linkPersonToClinic).toHaveBeenCalled()
-    expect(repo.create).toHaveBeenCalled()
-    expect(prisma.subscription.create).toHaveBeenCalled()
+    expect(prisma.$transaction).toHaveBeenCalled()
+    expect(tx.organization.create).toHaveBeenCalled()
+    expect(tx.subscription.create).toHaveBeenCalled()
+    expect(clinicApi.updateClinicAccess).toHaveBeenCalled()
   })
 
-  it('creates TRIAL subscription with 14-day trialEndsAt', async () => {
+  it('creates TRIAL subscription with 14-day trialEndsAt inside the transaction', async () => {
+    tx = makeTx({ id: 'org-new' })
+    prisma.$transaction.mockImplementation(async (fn: (tx: any) => Promise<unknown>) => fn(tx))
+
     repo.findAll.mockResolvedValue({ data: [], total: 0 })
     clinicApi.createClinic.mockResolvedValue({ clinicId: 'clinic-new' } as any)
     clinicApi.upsertPerson.mockResolvedValue(personResp(false) as any)
-    clinicApi.linkPersonToClinic.mockResolvedValue(undefined as any)
-    repo.create.mockResolvedValue(makeOrg({ id: 'org-new' }))
 
     await sut.execute(baseInput)
 
-    expect(prisma.subscription.create).toHaveBeenCalledWith(
+    expect(tx.subscription.create).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.objectContaining({
           organizationId: 'org-new',
@@ -137,20 +154,17 @@ describe('CreateOrganizationWithOwnerUseCase', () => {
     repo.findAll.mockResolvedValue({ data: [], total: 0 })
     clinicApi.createClinic.mockResolvedValue({ clinicId: 'clinic-new' } as any)
     clinicApi.upsertPerson.mockResolvedValue(personResp(false) as any)
-    clinicApi.linkPersonToClinic.mockResolvedValue(undefined as any)
-    repo.create.mockResolvedValue(makeOrg())
 
     const result = await sut.execute(baseInput)
 
     expect(result.subscription).toMatchObject({ id: 'sub-1', status: 'TRIAL' })
+    expect(result.subscription.trialEndsAt).toBeInstanceOf(Date)
   })
 
   it('returns provisionalPassword when person is newly created', async () => {
     repo.findAll.mockResolvedValue({ data: [], total: 0 })
     clinicApi.createClinic.mockResolvedValue({ clinicId: 'clinic-new' } as any)
     clinicApi.upsertPerson.mockResolvedValue(personResp(false) as any)
-    clinicApi.linkPersonToClinic.mockResolvedValue(undefined as any)
-    repo.create.mockResolvedValue(makeOrg())
 
     const result = await sut.execute(baseInput)
 
@@ -162,8 +176,6 @@ describe('CreateOrganizationWithOwnerUseCase', () => {
     repo.findAll.mockResolvedValue({ data: [], total: 0 })
     clinicApi.createClinic.mockResolvedValue({ clinicId: 'clinic-new' } as any)
     clinicApi.upsertPerson.mockResolvedValue(personResp(true) as any)
-    clinicApi.linkPersonToClinic.mockResolvedValue(undefined as any)
-    repo.create.mockResolvedValue(makeOrg())
 
     const result = await sut.execute(baseInput)
 
@@ -175,8 +187,6 @@ describe('CreateOrganizationWithOwnerUseCase', () => {
     repo.findAll.mockResolvedValue({ data: [], total: 0 })
     clinicApi.createClinic.mockResolvedValue({ clinicId: 'clinic-new' } as any)
     clinicApi.upsertPerson.mockResolvedValue(personResp(false) as any)
-    clinicApi.linkPersonToClinic.mockResolvedValue(undefined as any)
-    repo.create.mockResolvedValue(makeOrg())
 
     await sut.execute(baseInput)
 
@@ -184,5 +194,16 @@ describe('CreateOrganizationWithOwnerUseCase', () => {
       'clinic-new',
       expect.objectContaining({ personId: 'person-1', role: 'ADMIN' }),
     )
+  })
+
+  it('blocks clinic in pelvi-ui and rethrows when local persistence fails', async () => {
+    repo.findAll.mockResolvedValue({ data: [], total: 0 })
+    clinicApi.createClinic.mockResolvedValue({ clinicId: 'clinic-fail' } as any)
+    clinicApi.upsertPerson.mockResolvedValue(personResp(false) as any)
+    const dbError = new Error('DB connection lost')
+    prisma.$transaction.mockRejectedValue(dbError)
+
+    await expect(sut.execute(baseInput)).rejects.toThrow('DB connection lost')
+    expect(clinicApi.updateClinicAccess).toHaveBeenCalledWith('clinic-fail', 'BLOCKED')
   })
 })
