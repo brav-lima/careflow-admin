@@ -1,9 +1,10 @@
-import { Controller, Post, Get, Body, UseGuards, Res, Req } from '@nestjs/common'
+import { Controller, Post, Get, Patch, Body, UseGuards, Res, Req } from '@nestjs/common'
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger'
 import { Throttle, ThrottlerGuard } from '@nestjs/throttler'
 import { Request, Response, CookieOptions } from 'express'
 import { AuthService } from './auth.service'
 import { LoginDto } from './dto/login.dto'
+import { ChangePasswordDto } from './dto/change-password.dto'
 import { JwtAuthGuard } from './guards/jwt-auth.guard'
 import { JwtRefreshGuard } from './guards/jwt-refresh.guard'
 import { CurrentUser } from './decorators/current-user.decorator'
@@ -93,5 +94,23 @@ export class AuthController {
   @Get('me')
   getMe(@CurrentUser() userId: string) {
     return this.authService.getMe(userId)
+  }
+
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
+  @Throttle({ default: { limit: 5, ttl: 60000 } })
+  @Patch('me/password')
+  async changePassword(
+    @CurrentUser() userId: string,
+    @Body() dto: ChangePasswordDto,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const { accessToken, refreshToken, refreshTokenMaxAgeMs } =
+      await this.authService.changePassword(userId, dto)
+    // lgtm[js/clear-text-storage-of-sensitive-data] — httpOnly cookies are the intended secure transport for JWTs; encrypting them would break token validation
+    res.cookie(ACCESS_COOKIE_NAME, accessToken, accessCookieOptions())
+    // lgtm[js/clear-text-storage-of-sensitive-data]
+    res.cookie(REFRESH_COOKIE_NAME, refreshToken, refreshCookieOptions(refreshTokenMaxAgeMs))
+    return { ok: true }
   }
 }
