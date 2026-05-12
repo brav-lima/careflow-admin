@@ -18,7 +18,10 @@ import { VersionModule } from './version/version.module'
       // dotenvx já injeta as variáveis no processo antes do NestJS iniciar
       ignoreEnvFile: true,
     }),
-    ThrottlerModule.forRoot([{ ttl: 60000, limit: 100 }]),
+    ThrottlerModule.forRoot([
+      { ttl: 60000, limit: 100 },
+      { name: 'reset-ip', ttl: 3_600_000, limit: 1000 },
+    ]),
     PrismaModule,
     ClinicApiModule,
     AuthModule,
