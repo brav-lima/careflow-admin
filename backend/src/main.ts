@@ -50,11 +50,16 @@ async function bootstrap() {
     .build()
 
   const document = SwaggerModule.createDocument(app, swaggerConfig)
-  SwaggerModule.setup('api/admin/docs', app, document)
+
+  if (process.env.NODE_ENV !== 'production') {
+    SwaggerModule.setup('api/admin/docs', app, document)
+  }
 
   await app.listen(port)
   console.log(`🚀 Admin API running on http://localhost:${port}/api/admin`)
-  console.log(`📖 Swagger docs: http://localhost:${port}/api/admin/docs`)
+  if (process.env.NODE_ENV !== 'production') {
+    console.log(`📖 Swagger docs: http://localhost:${port}/api/admin/docs`)
+  }
 }
 
 bootstrap()

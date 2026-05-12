@@ -1,11 +1,19 @@
-import { Controller, Get } from '@nestjs/common'
+import { Controller, Get, ServiceUnavailableException } from '@nestjs/common'
 import { ApiTags } from '@nestjs/swagger'
+import { PrismaService } from '../prisma/prisma.service'
 
 @ApiTags('health')
 @Controller('health')
 export class VersionController {
+  constructor(private readonly prisma: PrismaService) {}
+
   @Get()
-  get() {
+  async get() {
+    try {
+      await this.prisma.$queryRaw`SELECT 1`
+    } catch {
+      throw new ServiceUnavailableException('Database unavailable')
+    }
     return { status: 'ok', message: 'Tudo estável' }
   }
 }
