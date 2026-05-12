@@ -1,6 +1,7 @@
 import { PrismaClient } from '@prisma/client'
 import { PrismaPg } from '@prisma/adapter-pg'
 import * as bcrypt from 'bcrypt'
+import { randomBytes } from 'crypto'
 
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_ADMIN_URL! })
 const prisma = new PrismaClient({ adapter })
@@ -52,8 +53,11 @@ async function main() {
 
   // Super admin inicial
   const adminEmail = process.env.SEED_ADMIN_EMAIL ?? 'admin@soupelvi.com.br'
-  const adminPassword = process.env.SEED_ADMIN_PASSWORD ?? 'changeme123'
+  const DEFAULT_PASSWORD = 'changeme123'
+  const rawPassword = process.env.SEED_ADMIN_PASSWORD ?? DEFAULT_PASSWORD
+  const isDefault = rawPassword === DEFAULT_PASSWORD
 
+  const adminPassword = isDefault ? randomBytes(16).toString('hex') : rawPassword
   const passwordHash = await bcrypt.hash(adminPassword, 12)
 
   await prisma.adminUser.upsert({
@@ -68,7 +72,12 @@ async function main() {
   })
 
   console.log(`✅ Admin criado: ${adminEmail}`)
-  console.log('⚠️  Troque a senha do admin após o primeiro login!')
+  if (isDefault) {
+    console.log(`🔑 Senha gerada automaticamente: ${adminPassword}`)
+    console.log('⚠️  Guarde essa senha agora — ela não será exibida novamente!')
+  } else {
+    console.log('⚠️  Troque a senha do admin após o primeiro login!')
+  }
 }
 
 main()
