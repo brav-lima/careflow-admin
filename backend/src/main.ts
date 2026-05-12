@@ -6,9 +6,11 @@ import * as cookieParser from 'cookie-parser'
 import helmet from 'helmet'
 import { AppModule } from './app.module'
 import { GlobalExceptionFilter } from './common/filters/global-exception.filter'
+import { AppLogger } from './common/logger/app-logger.service'
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule)
+  const appLogger = new AppLogger()
+  const app = await NestFactory.create(AppModule, { logger: appLogger })
 
   const config = app.get(ConfigService)
   const port = config.get<number>('PORT', 3001)

@@ -1,5 +1,6 @@
 import { ArgumentsHost, Catch, ExceptionFilter, HttpException, Logger } from '@nestjs/common'
 import { Response } from 'express'
+import { getCorrelationId } from '../correlation/correlation.context'
 
 @Catch()
 export class GlobalExceptionFilter implements ExceptionFilter {
@@ -22,6 +23,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     response.status(status).json({
       statusCode: status,
       message,
+      correlationId: getCorrelationId(),
       timestamp: new Date().toISOString(),
     })
   }
