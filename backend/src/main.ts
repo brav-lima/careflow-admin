@@ -1,5 +1,5 @@
-import { NestFactory } from '@nestjs/core'
-import { ValidationPipe, BadRequestException } from '@nestjs/common'
+import { NestFactory, Reflector } from '@nestjs/core'
+import { ValidationPipe, BadRequestException, ClassSerializerInterceptor } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger'
 import * as cookieParser from 'cookie-parser'
@@ -40,6 +40,7 @@ async function bootstrap() {
   app.enableCors({ origin: corsOrigin, credentials: true })
 
   app.useGlobalFilters(new GlobalExceptionFilter())
+  app.useGlobalInterceptors(new ClassSerializerInterceptor(app.get(Reflector)))
 
   app.useGlobalPipes(
     new ValidationPipe({

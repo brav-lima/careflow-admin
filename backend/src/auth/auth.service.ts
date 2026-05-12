@@ -6,6 +6,7 @@ import * as crypto from 'crypto'
 import { PrismaService } from '../prisma/prisma.service'
 import { LoginDto } from './dto/login.dto'
 import { ChangePasswordDto } from './dto/change-password.dto'
+import { AdminUserResponseDto } from './dto/admin-user-response.dto'
 import { JwtRefreshPayload } from './strategies/jwt-refresh.strategy'
 
 const REFRESH_TTL_DAYS = 7
@@ -43,24 +44,18 @@ export class AuthService {
 
     return {
       ...tokens,
-      user: {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-      },
+      user: new AdminUserResponseDto(user as Record<string, unknown>),
     }
   }
 
   async getMe(userId: string) {
     const user = await this.prisma.adminUser.findUnique({
       where: { id: userId },
-      select: { id: true, name: true, email: true, role: true, createdAt: true },
     })
 
     if (!user) throw new UnauthorizedException()
 
-    return user
+    return new AdminUserResponseDto(user as Record<string, unknown>)
   }
 
   async rotateRefreshToken(userId: string, jti: string): Promise<IssuedTokens> {
