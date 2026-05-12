@@ -11,6 +11,13 @@ async function main() {
   // Planos padrão
   const plans = [
     {
+      name: 'Trial',
+      priceMonthly: 0,
+      maxUsers: 3,
+      maxPatients: 50,
+      features: { nfse: false, whatsapp: false, reports: false, trial: true },
+    },
+    {
       name: 'Básico',
       priceMonthly: 97,
       maxUsers: 3,
@@ -41,7 +48,7 @@ async function main() {
     })
   }
 
-  console.log(`✅ ${plans.length} planos criados`)
+  console.log(`✅ ${plans.length} planos criados (inclui Trial)`)
 
   // Super admin inicial
   const adminEmail = process.env.SEED_ADMIN_EMAIL ?? 'admin@soupelvi.com.br'
