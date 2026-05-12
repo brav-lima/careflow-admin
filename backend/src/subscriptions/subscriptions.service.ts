@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common'
 import { PrismaService } from '../prisma/prisma.service'
 import { ClinicApiService } from '../clinic-api/clinic-api.service'
 import { CreateSubscriptionDto } from './dto/create-subscription.dto'
+import { UpdateSubscriptionDto } from './dto/update-subscription.dto'
 
 @Injectable()
 export class SubscriptionsService {
@@ -76,8 +77,14 @@ export class SubscriptionsService {
     })
   }
 
-  async update(id: string, data: Partial<CreateSubscriptionDto>) {
+  async update(id: string, dto: UpdateSubscriptionDto) {
     await this.findOne(id)
-    return this.prisma.subscription.update({ where: { id }, data })
+    return this.prisma.subscription.update({
+      where: { id },
+      data: {
+        ...(dto.trialEndsAt !== undefined && { trialEndsAt: new Date(dto.trialEndsAt) }),
+        ...(dto.status !== undefined && { status: dto.status as any }),
+      },
+    })
   }
 }
