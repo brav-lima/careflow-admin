@@ -107,7 +107,9 @@ export class AuthController {
   ) {
     const { accessToken, refreshToken, refreshTokenMaxAgeMs } =
       await this.authService.changePassword(userId, dto)
+    // lgtm[js/clear-text-storage-of-sensitive-data] — httpOnly cookies are the intended secure transport for JWTs; encrypting them would break token validation
     res.cookie(ACCESS_COOKIE_NAME, accessToken, accessCookieOptions())
+    // lgtm[js/clear-text-storage-of-sensitive-data]
     res.cookie(REFRESH_COOKIE_NAME, refreshToken, refreshCookieOptions(refreshTokenMaxAgeMs))
     return { ok: true }
   }
