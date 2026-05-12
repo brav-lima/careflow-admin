@@ -139,8 +139,7 @@ export class ClinicApiService {
     })
 
     if (!res.ok) {
-      const body = await res.text()
-      this.logger.error(`createClinic failed [${res.status}]: ${body}`)
+      this.logger.error(`createClinic failed [${res.status}]`)
       throw new ServiceUnavailableException(`Erro ao criar clínica no pelvi: ${res.status}`)
     }
 
@@ -156,8 +155,7 @@ export class ClinicApiService {
     })
 
     if (!res.ok) {
-      const body = await res.text()
-      this.logger.error(`listClinics failed [${res.status}]: ${body}`)
+      this.logger.error(`listClinics failed [${res.status}]`)
       throw new ServiceUnavailableException(`Erro ao listar clínicas do pelvi: ${res.status}`)
     }
 
@@ -181,14 +179,13 @@ export class ClinicApiService {
     })
 
     if (!res.ok) {
-      const body = await res.text()
-      this.logger.error(`updateClinicAccess failed [${res.status}]: ${body}`)
+      this.logger.error(`updateClinicAccess failed [${res.status}]`)
       throw new ServiceUnavailableException(`Erro ao atualizar acesso no pelvi: ${res.status}`)
     }
   }
 
   async upsertPerson(payload: UpsertPersonPayload): Promise<UpsertPersonResponse> {
-    this.logger.log(`Upserting person cpf=${payload.cpf}`)
+    this.logger.log(`Upserting person cpf=***${payload.cpf.slice(-3)}`)
 
     const res = await this.fetchWithTimeout(this.buildUrl`/api/internal/persons`, {
       method: 'POST',
@@ -197,8 +194,7 @@ export class ClinicApiService {
     })
 
     if (!res.ok) {
-      const body = await res.text()
-      this.logger.error(`upsertPerson failed [${res.status}]: ${body}`)
+      this.logger.error(`upsertPerson failed [${res.status}]`)
       throw new ServiceUnavailableException(`Erro ao registrar responsável no pelvi: ${res.status}`)
     }
 
@@ -221,8 +217,7 @@ export class ClinicApiService {
     )
 
     if (!res.ok) {
-      const body = await res.text()
-      this.logger.error(`linkPersonToClinic failed [${res.status}]: ${body}`)
+      this.logger.error(`linkPersonToClinic failed [${res.status}]`)
       throw new ServiceUnavailableException(`Erro ao vincular responsável à clínica: ${res.status}`)
     }
 
@@ -238,8 +233,7 @@ export class ClinicApiService {
     )
 
     if (!res.ok) {
-      const body = await res.text()
-      this.logger.error(`listClinicUsers failed [${res.status}]: ${body}`)
+      this.logger.error(`listClinicUsers failed [${res.status}]`)
       throw new ServiceUnavailableException(`Erro ao listar usuários da clínica: ${res.status}`)
     }
 
@@ -259,8 +253,7 @@ export class ClinicApiService {
     )
 
     if (!res.ok) {
-      const body = await res.text()
-      this.logger.error(`updateClinicUser failed [${res.status}]: ${body}`)
+      this.logger.error(`updateClinicUser failed [${res.status}]`)
       throw new ServiceUnavailableException(`Erro ao atualizar usuário da clínica: ${res.status}`)
     }
 
@@ -280,8 +273,7 @@ export class ClinicApiService {
     )
 
     if (!res.ok) {
-      const body = await res.text()
-      this.logger.error(`resetClinicUserPassword failed [${res.status}]: ${body}`)
+      this.logger.error(`resetClinicUserPassword failed [${res.status}]`)
       throw new ServiceUnavailableException(`Erro ao resetar senha: ${res.status}`)
     }
   }
