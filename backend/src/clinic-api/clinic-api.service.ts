@@ -103,6 +103,7 @@ export class ClinicApiService {
   // Builds an absolute URL against CLINIC_API_URL while ensuring that no
   // dynamic segment can escape the configured origin or traverse the path.
   // Each segment is URI-encoded and the final origin must match the base.
+  // In production, enforces HTTPS to prevent credentials traveling in plaintext.
   private buildUrl(template: TemplateStringsArray, ...segments: string[]): string {
     let path = template[0]
     for (let i = 0; i < segments.length; i++) {
@@ -112,6 +113,9 @@ export class ClinicApiService {
     const url = new URL(base.toString().replace(/\/+$/, '') + path)
     if (url.origin !== base.origin) {
       throw new ServiceUnavailableException('URL inválida para pelvi API')
+    }
+    if (process.env.NODE_ENV === 'production' && url.protocol !== 'https:') {
+      throw new ServiceUnavailableException('CLINIC_API_URL deve usar HTTPS em produção')
     }
     return url.toString()
   }
