@@ -18,7 +18,24 @@ async function bootstrap() {
     throw new Error('CORS_ORIGIN must be set to a production domain in production environment')
   }
 
-  app.use(helmet())
+  app.use(
+    helmet({
+      contentSecurityPolicy: {
+        directives: {
+          defaultSrc: ["'self'"],
+          scriptSrc: ["'self'"],
+          styleSrc: ["'self'", "'unsafe-inline'"], // Swagger UI requires inline styles
+          imgSrc: ["'self'", 'data:'],
+          connectSrc: ["'self'"],
+          frameAncestors: ["'none'"],
+          objectSrc: ["'none'"],
+          baseUri: ["'self'"],
+        },
+      },
+      crossOriginResourcePolicy: { policy: 'same-site' },
+      referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
+    }),
+  )
   app.use(cookieParser())
   app.enableCors({ origin: corsOrigin, credentials: true })
 
