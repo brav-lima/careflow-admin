@@ -67,6 +67,7 @@ export class CreateOrganizationWithOwnerUseCase {
       )
     }
 
+    // ── External calls (pelvi-ui) ────────────────────────────────────────────
     const clinic = await this.clinicApi.createClinic({
       name: input.name,
       document,
@@ -89,29 +90,60 @@ export class CreateOrganizationWithOwnerUseCase {
       role: 'ADMIN',
     })
 
-    const organization = await this.repo.create({
-      name: input.name,
-      document,
-      documentType,
-      email: input.email,
-      phone: input.phone ?? null,
-      status: 'ACTIVE',
-      clinicExternalId: clinic.clinicId,
-    })
-
+    // ── Local persistence (atomic) ───────────────────────────────────────────
+    // If this fails, the clinic already exists in pelvi-ui. Compensate by
+    // blocking it so it cannot be used until an operator resolves the conflict.
     const trialPlanId = await this.resolveTrialPlan.planId()
     const trialEndsAt = new Date(Date.now() + TRIAL_DAYS * 24 * 60 * 60 * 1000)
 
-    const subscription = await this.prisma.subscription.create({
-      data: {
-        organizationId: organization.id,
-        planId: trialPlanId,
-        status: 'TRIAL',
-        startDate: new Date(),
-        trialEndsAt,
-      },
-    })
+    let organization: Organization
+    let subscription: { id: string; status: string; trialEndsAt: Date }
 
+    try {
+      const result = await this.prisma.$transaction(async (tx) => {
+        const org = await tx.organization.create({
+          data: {
+            name: input.name,
+            document,
+            documentType,
+            email: input.email,
+            phone: input.phone ?? null,
+            status: 'ACTIVE',
+            clinicExternalId: clinic.clinicId,
+          },
+        })
+        const sub = await tx.subscription.create({
+          data: {
+            organizationId: org.id,
+            planId: trialPlanId,
+            status: 'TRIAL',
+            startDate: new Date(),
+            trialEndsAt,
+          },
+        })
+        return { org, sub }
+      })
+      organization = result.org as Organization
+      subscription = {
+        id: result.sub.id,
+        status: result.sub.status,
+        trialEndsAt: result.sub.trialEndsAt!,
+      }
+    } catch (persistenceError) {
+      this.logger.error(
+        `Local persistence failed for clinic ${clinic.clinicId} — blocking in pelvi-ui as compensation`,
+      )
+      try {
+        await this.clinicApi.updateClinicAccess(clinic.clinicId, 'BLOCKED')
+      } catch {
+        this.logger.error(
+          `Compensation also failed for clinic ${clinic.clinicId} — manual cleanup required`,
+        )
+      }
+      throw persistenceError
+    }
+
+    // ── Propagate plan limits to pelvi-ui ────────────────────────────────────
     const plan = await this.prisma.plan.findUniqueOrThrow({ where: { id: trialPlanId } })
     await this.clinicApi.updateClinicAccess(clinic.clinicId, 'ACTIVE', {
       maxUsers: plan.maxUsers,
@@ -119,7 +151,7 @@ export class CreateOrganizationWithOwnerUseCase {
     })
 
     if (personResp.reused) {
-      this.logger.log(`Owner reaproveitado (cpf=${input.owner.cpf}); senha provisória não foi redefinida.`)
+      this.logger.log(`Owner reaproveitado (cpf=***${input.owner.cpf.slice(-3)}); senha provisória não foi redefinida.`)
     }
 
     return {
@@ -131,11 +163,7 @@ export class CreateOrganizationWithOwnerUseCase {
         email: personResp.person.email,
         reused: personResp.reused,
       },
-      subscription: {
-        id: subscription.id,
-        status: subscription.status,
-        trialEndsAt: subscription.trialEndsAt!,
-      },
+      subscription,
       provisionalPassword: personResp.reused ? null : provisionalPassword,
     }
   }
