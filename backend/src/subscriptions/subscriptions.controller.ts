@@ -5,6 +5,7 @@ import { RolesGuard } from '../auth/guards/roles.guard'
 import { Roles } from '../auth/decorators/roles.decorator'
 import { SubscriptionsService } from './subscriptions.service'
 import { CreateSubscriptionDto } from './dto/create-subscription.dto'
+import { UpdateSubscriptionDto } from './dto/update-subscription.dto'
 
 @ApiTags('subscriptions')
 @ApiBearerAuth()
@@ -47,7 +48,7 @@ export class SubscriptionsController {
 
   @Patch(':id')
   @Roles('SUPER_ADMIN', 'FINANCE')
-  update(@Param('id', ParseUUIDPipe) id: string, @Body() dto: Partial<CreateSubscriptionDto>) {
+  update(@Param('id', ParseUUIDPipe) id: string, @Body() dto: UpdateSubscriptionDto) {
     return this.subscriptionsService.update(id, dto)
   }
 
