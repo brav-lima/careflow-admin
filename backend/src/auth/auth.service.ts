@@ -1,10 +1,11 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common'
+import { Injectable, UnauthorizedException, BadRequestException } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 import { JwtService } from '@nestjs/jwt'
 import * as bcrypt from 'bcrypt'
 import * as crypto from 'crypto'
 import { PrismaService } from '../prisma/prisma.service'
 import { LoginDto } from './dto/login.dto'
+import { ChangePasswordDto } from './dto/change-password.dto'
 import { JwtRefreshPayload } from './strategies/jwt-refresh.strategy'
 
 const REFRESH_TTL_DAYS = 7
@@ -99,6 +100,29 @@ export class AuthService {
     })
 
     return this.issueTokens(user.id, user.role)
+  }
+
+  async changePassword(userId: string, dto: ChangePasswordDto): Promise<IssuedTokens> {
+    const user = await this.prisma.adminUser.findUnique({ where: { id: userId } })
+    if (!user || !user.active) throw new UnauthorizedException()
+
+    const valid = await bcrypt.compare(dto.currentPassword, user.passwordHash)
+    if (!valid) throw new BadRequestException('Senha atual incorreta')
+
+    const same = await bcrypt.compare(dto.newPassword, user.passwordHash)
+    if (same) throw new BadRequestException('A nova senha deve ser diferente da atual')
+
+    const passwordHash = await bcrypt.hash(dto.newPassword, 12)
+    await this.prisma.adminUser.update({ where: { id: userId }, data: { passwordHash } })
+
+    // Revoke all existing refresh tokens (other sessions)
+    await this.prisma.adminRefreshToken.updateMany({
+      where: { userId, revokedAt: null },
+      data: { revokedAt: new Date() },
+    })
+
+    // Issue fresh tokens so current session stays alive
+    return this.issueTokens(userId, user.role)
   }
 
   async revokeRefreshToken(jti: string): Promise<void> {

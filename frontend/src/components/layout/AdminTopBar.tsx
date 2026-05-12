@@ -1,8 +1,11 @@
+import { useState } from 'react'
+import { KeyRound, LogOut, User } from 'lucide-react'
 import { useAdminAuth } from '@/contexts/AdminAuthContext'
-import { LogOut, User } from 'lucide-react'
+import { ChangePasswordModal } from '@/components/auth/ChangePasswordModal'
 
 export function AdminTopBar() {
   const { user, logout } = useAdminAuth()
+  const [changePasswordOpen, setChangePasswordOpen] = useState(false)
 
   return (
     <header className="h-14 border-b bg-card px-6 flex items-center justify-between">
@@ -16,6 +19,13 @@ export function AdminTopBar() {
           </span>
         </div>
         <button
+          onClick={() => setChangePasswordOpen(true)}
+          className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
+        >
+          <KeyRound className="h-4 w-4" />
+          Alterar senha
+        </button>
+        <button
           onClick={logout}
           className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
         >
@@ -23,6 +33,8 @@ export function AdminTopBar() {
           Sair
         </button>
       </div>
+
+      <ChangePasswordModal open={changePasswordOpen} onOpenChange={setChangePasswordOpen} />
     </header>
   )
 }
