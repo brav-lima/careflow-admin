@@ -1,7 +1,20 @@
-import { useState, FormEvent } from 'react'
+import { useState, FormEvent, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAdminAuth } from '@/contexts/AdminAuthContext'
 
+type ApiStatus = 'checking' | 'operational' | 'degraded'
+
+const STATUS_LABEL: Record<ApiStatus, string> = {
+  checking: 'verificando…',
+  operational: 'operational',
+  degraded: 'degraded',
+}
+
+const STATUS_COLOR: Record<ApiStatus, string> = {
+  checking: 'rgba(255,255,255,0.3)',
+  operational: 'hsl(142 71% 45%)',
+  degraded: 'hsl(0 72% 51%)',
+}
 
 export function LoginPage() {
   const { login } = useAdminAuth()
@@ -11,6 +24,13 @@ export function LoginPage() {
   const [rememberMe, setRememberMe] = useState(true)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [apiStatus, setApiStatus] = useState<ApiStatus>('checking')
+
+  useEffect(() => {
+    fetch('/api/admin/health', { signal: AbortSignal.timeout(5000) })
+      .then(r => setApiStatus(r.ok ? 'operational' : 'degraded'))
+      .catch(() => setApiStatus('degraded'))
+  }, [])
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
@@ -80,7 +100,15 @@ export function LoginPage() {
         {/* Footer */}
         <div style={{ marginTop: 28, paddingTop: 18, borderTop: '1px solid rgba(255,255,255,0.10)', display: 'flex', gap: 24, fontSize: 11.5, color: 'rgba(255,255,255,0.45)' }}>
           <span>Pelvi Admin · v1</span>
-          <span style={{ marginLeft: 'auto' }}>API · operational</span>
+          <span style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 5 }}>
+            <span style={{
+              width: 6, height: 6, borderRadius: '50%',
+              background: STATUS_COLOR[apiStatus],
+              flexShrink: 0,
+              boxShadow: apiStatus === 'operational' ? '0 0 5px hsl(142 71% 45% / 0.7)' : undefined,
+            }} />
+            API · {STATUS_LABEL[apiStatus]}
+          </span>
         </div>
 
         {/* Decorative grid */}
