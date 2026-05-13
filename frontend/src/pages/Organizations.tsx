@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import { api } from '@/lib/api'
-import { formatDate, formatCNPJ } from '@/lib/utils'
+import { formatDate, formatCNPJ, formatCurrency } from '@/lib/utils'
 import type { Organization, OrgStatus, PaginatedResponse } from '@/types/admin'
 import { useState } from 'react'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -90,7 +90,7 @@ export function OrganizationsPage() {
                 <th style={{ width: 32 }}><input type="checkbox" style={{ accentColor: 'var(--p)' }} /></th>
                 <th>Organização</th>
                 <th>CNPJ</th>
-                <th>Plano</th>
+                <th style={{ textAlign: 'right' }}>MRR</th>
                 <th style={{ textAlign: 'right' }}>Usuários</th>
                 <th>Status</th>
                 <th>Cliente desde</th>
@@ -123,7 +123,9 @@ export function OrganizationsPage() {
                   <td style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: 'var(--text-muted)' }}>
                     {formatCNPJ(org.document)}
                   </td>
-                  <td>—</td>
+                  <td className="num" style={{ textAlign: 'right', fontFamily: 'var(--font-mono)', fontSize: 12, color: 'var(--text-2)' }}>
+                    {org.mrr != null ? formatCurrency(org.mrr) : '—'}
+                  </td>
                   <td className="num" style={{ textAlign: 'right', fontFamily: 'var(--font-mono)', fontSize: 12, color: 'var(--text-2)' }}>—</td>
                   <td>
                     {org.status === 'ACTIVE'    ? <StatusPill tone="ok">Ativa</StatusPill>

@@ -21,6 +21,7 @@ export interface Organization {
   clinicExternalId: string | null
   createdAt: string
   updatedAt: string
+  mrr: number | null
 }
 
 export interface Plan {

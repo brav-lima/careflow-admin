@@ -12,4 +12,5 @@ export interface Organization {
   clinicExternalId: string | null
   createdAt: Date
   updatedAt: Date
+  mrr?: number | null
 }
