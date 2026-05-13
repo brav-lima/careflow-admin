@@ -91,6 +91,81 @@ export class MetricsService {
     }
   }
 
+  async getKpiTrends(months: number) {
+    const now = new Date()
+    // Slot 0 = oldest, slot N-1 = most recent (current month)
+    const slots = Array.from({ length: months }, (_, i) => {
+      const offset = months - 1 - i
+      const start = new Date(now.getFullYear(), now.getMonth() - offset, 1)
+      const end = new Date(now.getFullYear(), now.getMonth() - offset + 1, 0, 23, 59, 59, 999)
+      return { start, end }
+    })
+
+    const windowStart = slots[0].start
+
+    const [paidInvoices, orgsCreated, trialsCreated, overdueByDue] =
+      await this.prisma.$transaction([
+        this.prisma.invoice.findMany({
+          where: { status: 'PAID', paidAt: { gte: windowStart } },
+          select: { amount: true, paidAt: true },
+          take: 50000,
+        }),
+        this.prisma.organization.findMany({
+          where: { createdAt: { gte: windowStart } },
+          select: { createdAt: true },
+          take: 50000,
+        }),
+        this.prisma.subscription.findMany({
+          where: { startDate: { gte: windowStart } },
+          select: { startDate: true },
+          take: 50000,
+        }),
+        this.prisma.invoice.findMany({
+          where: { status: 'OVERDUE', dueDate: { gte: windowStart } },
+          select: { dueDate: true },
+          take: 50000,
+        }),
+      ])
+
+    const inSlot = (date: Date, slot: { start: Date; end: Date }) =>
+      date >= slot.start && date <= slot.end
+
+    const mrr = slots.map((s) =>
+      paidInvoices.filter((i) => i.paidAt && inSlot(i.paidAt, s)).reduce((acc, i) => acc + Number(i.amount), 0),
+    )
+    const activeOrgs = slots.map((s) =>
+      orgsCreated.filter((o) => o.createdAt <= s.end).length,
+    )
+    const trialOrgs = slots.map((s) =>
+      trialsCreated.filter((sub) => inSlot(sub.startDate, s)).length,
+    )
+    const overdueInvoices = slots.map((s) =>
+      overdueByDue.filter((i) => inSlot(i.dueDate, s)).length,
+    )
+
+    const last = months - 1
+    const prev = months - 2
+
+    const delta = (arr: number[], i: number, j: number) => arr[j] - arr[i]
+    const pctDelta = (arr: number[], i: number, j: number) =>
+      arr[i] === 0 ? 0 : Math.round(((arr[j] - arr[i]) / arr[i]) * 1000) / 10
+
+    return {
+      months,
+      mrr,
+      activeOrgs,
+      trialOrgs,
+      // suspendedOrgs is a snapshot metric; not derivable from createdAt alone
+      suspendedOrgs: Array(months).fill(0) as number[],
+      overdueInvoices,
+      mrrDelta: pctDelta(mrr, prev, last),
+      activeOrgsDelta: delta(activeOrgs, prev, last),
+      trialOrgsDelta: delta(trialOrgs, prev, last),
+      suspendedOrgsDelta: 0,
+      overdueInvoicesDelta: delta(overdueInvoices, prev, last),
+    }
+  }
+
   async getOrganizationsByPeriod(period: 'week' | 'month' | 'year' = 'month') {
     const now = new Date()
     const ranges = {

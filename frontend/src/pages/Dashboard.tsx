@@ -2,10 +2,18 @@ import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import { api } from '@/lib/api'
 import { formatCurrency } from '@/lib/utils'
-import type { MetricsSummary, Organization, Invoice, PaginatedResponse, ConversionFunnel } from '@/types/admin'
+import type { MetricsSummary, Organization, Invoice, PaginatedResponse, ConversionFunnel, KpiTrends } from '@/types/admin'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Sparkline, OrgAvatar, StatusPill, PageHeader, Card, CardHeader } from '@/components/ui/ds'
 
+function fmtDelta(value: number, pct = false): { label: string; tone: 'up' | 'down' | 'flat' } {
+  if (value === 0) return { label: '—', tone: 'flat' }
+  const abs = Math.abs(value)
+  const label = pct
+    ? `${value > 0 ? '+' : '−'}${abs.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}%`
+    : `${value > 0 ? '+' : '−'}${abs}`
+  return { label, tone: value > 0 ? 'up' : 'down' }
+}
 
 const DownloadIcon = () => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" style={{ width: 14, height: 14 }}>
@@ -86,6 +94,11 @@ export function DashboardPage() {
     queryFn: () => api.get('/metrics/funnel').then((r) => r.data),
   })
 
+  const { data: trends } = useQuery<KpiTrends>({
+    queryKey: ['metrics-kpi-trends'],
+    queryFn: () => api.get('/metrics/kpi-trends').then((r) => r.data),
+  })
+
   const { data: recentOrgsResp } = useQuery<PaginatedResponse<Organization>>({
     queryKey: ['organizations', '', '', 1, 5],
     queryFn: () => api.get('/organizations', { params: { limit: 5 } }).then((r) => r.data),
@@ -138,31 +151,47 @@ export function DashboardPage() {
       />
 
       {/* KPI strip */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr 1fr 1fr 1fr', background: 'var(--surface)', border: '1px solid var(--ds-border)', borderRadius: 12, overflow: 'hidden', boxShadow: 'var(--shadow-xs)' }}>
-        <KpiTile
-          label="MRR (receita mensal)" currency
-          value={mrr.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-          delta="—" deltaTone="flat" trend={[]} color="var(--ok-ink)"
-        />
-        <KpiTile label="Organizações ativas" value={String(data?.activeOrgs ?? 0)} delta="—" deltaTone="flat" trend={[]} color="var(--info-ink)"/>
-        <KpiTile label="Em trial" value={String(data?.trialOrgs ?? 0)} delta="—" deltaTone="flat" trend={[]} color="var(--warn-ink)"/>
-        <KpiTile label="Suspensas" value={String(data?.suspendedOrgs ?? 0)} delta="—" deltaTone="flat" trend={[]} color="var(--warn-ink)"/>
-        <div style={{ padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: 6, minWidth: 0 }}>
-          <div style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 500 }}>Faturas vencidas</div>
-          <div style={{ fontFamily: 'var(--font-display)', fontSize: 28, fontWeight: 600, letterSpacing: '-0.022em', color: 'var(--danger)', fontVariantNumeric: 'tabular-nums', lineHeight: '32px' }}>
-            {data?.overdueInvoices ?? 0}
+      {(() => {
+        const mrrD = fmtDelta(trends?.mrrDelta ?? 0, true)
+        const activeD = fmtDelta(trends?.activeOrgsDelta ?? 0)
+        const trialD = fmtDelta(trends?.trialOrgsDelta ?? 0)
+        const overdueD = fmtDelta(trends?.overdueInvoicesDelta ?? 0)
+        return (
+          <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr 1fr 1fr 1fr', background: 'var(--surface)', border: '1px solid var(--ds-border)', borderRadius: 12, overflow: 'hidden', boxShadow: 'var(--shadow-xs)' }}>
+            <KpiTile
+              label="MRR (receita mensal)" currency
+              value={mrr.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              delta={mrrD.label} deltaTone={mrrD.tone} trend={trends?.mrr ?? []} color="var(--ok-ink)"
+            />
+            <KpiTile label="Organizações ativas" value={String(data?.activeOrgs ?? 0)}
+              delta={activeD.label} deltaTone={activeD.tone} trend={trends?.activeOrgs ?? []} color="var(--info-ink)"/>
+            <KpiTile label="Em trial" value={String(data?.trialOrgs ?? 0)}
+              delta={trialD.label} deltaTone={trialD.tone} trend={trends?.trialOrgs ?? []} color="var(--warn-ink)"/>
+            <KpiTile label="Suspensas" value={String(data?.suspendedOrgs ?? 0)}
+              delta="—" deltaTone="flat" trend={[]} color="var(--warn-ink)"/>
+            <div style={{ padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: 6, minWidth: 0 }}>
+              <div style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 500 }}>Faturas vencidas</div>
+              <div style={{ fontFamily: 'var(--font-display)', fontSize: 28, fontWeight: 600, letterSpacing: '-0.022em', color: 'var(--danger)', fontVariantNumeric: 'tabular-nums', lineHeight: '32px' }}>
+                {data?.overdueInvoices ?? 0}
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, fontVariantNumeric: 'tabular-nums', fontWeight: 500 }}>
+                <span style={{
+                  display: 'inline-flex', alignItems: 'center', padding: '1px 5px', borderRadius: 4,
+                  fontFamily: 'var(--font-mono)', fontSize: 11,
+                  background: overdueD.tone === 'up' ? 'var(--danger-soft)' : overdueD.tone === 'down' ? 'var(--ok-soft)' : 'var(--surface-3)',
+                  color: overdueD.tone === 'up' ? 'var(--danger-ink)' : overdueD.tone === 'down' ? 'var(--ok-ink)' : 'var(--text-muted)',
+                }}>
+                  {overdueD.tone === 'up' ? '↑' : overdueD.tone === 'down' ? '↓' : '•'} {overdueD.label}
+                </span>
+                <span style={{ color: 'var(--text-faint)', fontWeight: 400 }}>vs mês anterior</span>
+              </div>
+              <div style={{ height: 30, marginTop: 4 }}>
+                <Sparkline data={trends?.overdueInvoices ?? []} color="var(--danger-ink)" height={30} />
+              </div>
+            </div>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, fontVariantNumeric: 'tabular-nums', fontWeight: 500 }}>
-            <span style={{ display: 'inline-flex', alignItems: 'center', padding: '1px 5px', borderRadius: 4, fontFamily: 'var(--font-mono)', fontSize: 11, background: 'var(--surface-3)', color: 'var(--text-muted)' }}>
-              • —
-            </span>
-            <span style={{ color: 'var(--text-faint)', fontWeight: 400 }}>vs mês anterior</span>
-          </div>
-          <div style={{ height: 30, marginTop: 4 }}>
-            <Sparkline data={[]} color="var(--danger-ink)" height={30} />
-          </div>
-        </div>
-      </div>
+        )
+      })()}
 
       {/* Funnel + recent orgs */}
       <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 16 }}>

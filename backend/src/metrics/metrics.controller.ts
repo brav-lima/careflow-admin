@@ -32,6 +32,13 @@ export class MetricsController {
     return this.metricsService.getConversionFunnel(Number(days) || 90)
   }
 
+  @Get('kpi-trends')
+  @Roles('SUPER_ADMIN', 'FINANCE')
+  @ApiQuery({ name: 'months', required: false, type: Number })
+  getKpiTrends(@Query('months') months?: number) {
+    return this.metricsService.getKpiTrends(Math.min(Number(months) || 12, 24))
+  }
+
   @Get('organizations')
   @Roles('SUPER_ADMIN', 'FINANCE')
   @ApiQuery({ name: 'period', required: false, enum: ['week', 'month', 'year'] })
