@@ -235,7 +235,9 @@ export function DashboardPage() {
                       : org.status === 'SUSPENDED' ? <StatusPill tone="warn">Suspensa</StatusPill>
                       : <StatusPill tone="muted">Cancelada</StatusPill>}
                   </td>
-                  <td className="num" style={{ textAlign: 'right', fontFamily: 'var(--font-mono)', fontSize: 12 }}>—</td>
+                  <td className="num" style={{ textAlign: 'right', fontFamily: 'var(--font-mono)', fontSize: 12 }}>
+                    {org.mrr != null ? formatCurrency(org.mrr) : '—'}
+                  </td>
                 </tr>
               ))}
             </tbody>

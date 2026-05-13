@@ -7,8 +7,26 @@ import { Organization } from '../domain/organization.entity'
 export class PrismaOrganizationRepository implements IOrganizationRepository {
   constructor(private readonly prisma: PrismaService) {}
 
+  private readonly activeSubInclude = {
+    subscriptions: {
+      where: { status: { in: ['ACTIVE', 'TRIAL'] as ['ACTIVE', 'TRIAL'] } },
+      include: { plan: { select: { priceMonthly: true } } },
+      take: 1,
+    },
+  } as const
+
+  private computeMrr(subs: { plan: { priceMonthly: unknown } }[]): number | null {
+    return subs[0]?.plan ? Number(subs[0].plan.priceMonthly) : null
+  }
+
   async findById(id: string): Promise<Organization | null> {
-    return this.prisma.organization.findUnique({ where: { id } }) as Promise<Organization | null>
+    const org = await this.prisma.organization.findUnique({
+      where: { id },
+      include: this.activeSubInclude,
+    })
+    if (!org) return null
+    const { subscriptions, ...rest } = org
+    return { ...rest, mrr: this.computeMrr(subscriptions) }
   }
 
   async findAll(filter: ListOrganizationsFilter): Promise<{ data: Organization[]; total: number }> {
@@ -27,11 +45,20 @@ export class PrismaOrganizationRepository implements IOrganizationRepository {
     }
 
     const [data, total] = await this.prisma.$transaction([
-      this.prisma.organization.findMany({ where, skip, take: limit, orderBy: { createdAt: 'desc' } }),
+      this.prisma.organization.findMany({
+        where, skip, take: limit, orderBy: { createdAt: 'desc' },
+        include: this.activeSubInclude,
+      }),
       this.prisma.organization.count({ where }),
     ])
 
-    return { data: data as Organization[], total }
+    return {
+      data: data.map(({ subscriptions, ...org }) => ({
+        ...org,
+        mrr: this.computeMrr(subscriptions),
+      })),
+      total,
+    }
   }
 
   async create(data: Omit<Organization, 'id' | 'createdAt' | 'updatedAt'>): Promise<Organization> {
