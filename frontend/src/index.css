@@ -4,34 +4,93 @@
 
 @layer base {
   :root {
+    /* ── Tailwind shadcn tokens (kept for compatibility) ── */
     --background: 30 18% 98%;
-    --foreground: 222.2 84% 4.9%;
+    --foreground: 220 20% 10%;
     --card: 30 10% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card-foreground: 220 20% 10%;
     --popover: 30 10% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    --popover-foreground: 220 20% 10%;
     --primary: 16 65% 44%;
     --primary-foreground: 0 0% 100%;
     --secondary: 30 15% 96%;
     --secondary-foreground: 222.2 47.4% 11.2%;
     --muted: 30 12% 94%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    --muted-foreground: 220 10% 45%;
     --accent: 16 55% 93%;
     --accent-foreground: 16 65% 28%;
-    --destructive: 0 84.2% 60.2%;
+    --destructive: 0 72% 51%;
     --destructive-foreground: 210 40% 98%;
     --border: 20 15% 90%;
     --input: 20 15% 90%;
     --ring: 16 65% 44%;
     --radius: 0.5rem;
-    --sidebar-background: 20 15% 8%;
-    --sidebar-foreground: 210 40% 98%;
+    --sidebar-background: 20 15% 9%;
+    --sidebar-foreground: 30 18% 96%;
     --sidebar-primary: 16 60% 52%;
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 16 45% 18%;
     --sidebar-accent-foreground: 16 60% 80%;
-    --sidebar-border: 20 12% 20%;
+    --sidebar-border: 20 12% 18%;
     --sidebar-ring: 16 60% 52%;
+
+    /* ── Pelvi Design System tokens ── */
+    --bg:           hsl(30 18% 98%);
+    --surface:      hsl(30 10% 100%);
+    --surface-2:    hsl(30 15% 96%);
+    --surface-3:    hsl(20 14% 93%);
+    --ds-border:    hsl(20 15% 90%);
+    --border-soft:  hsl(20 14% 93%);
+    --divider:      hsl(20 14% 93%);
+
+    --text:         hsl(220 20% 10%);
+    --text-2:       hsl(220 14% 28%);
+    --text-muted:   hsl(220 10% 45%);
+    --text-faint:   hsl(220 8% 62%);
+
+    --p:            hsl(16 65% 44%);
+    --p-hover:      hsl(16 65% 34%);
+    --p-soft:       hsl(16 55% 93%);
+    --p-soft-2:     hsl(16 60% 96%);
+    --p-border:     hsl(16 50% 82%);
+    --p-ink:        hsl(16 65% 28%);
+
+    --ok:           hsl(142 72% 40%);
+    --ok-soft:      hsl(142 55% 93%);
+    --ok-ink:       hsl(142 60% 22%);
+
+    --warn:         hsl(38 92% 50%);
+    --warn-soft:    hsl(38 90% 94%);
+    --warn-ink:     hsl(30 75% 30%);
+
+    --danger:       hsl(0 72% 51%);
+    --danger-soft:  hsl(0 75% 95%);
+    --danger-ink:   hsl(0 65% 32%);
+
+    --info:         hsl(199 89% 48%);
+    --info-soft:    hsl(199 85% 94%);
+    --info-ink:     hsl(199 70% 28%);
+
+    --violet:       hsl(285 60% 60%);
+    --violet-soft:  hsl(285 65% 95%);
+    --violet-ink:   hsl(285 50% 32%);
+
+    --side-bg:      hsl(20 15% 9%);
+    --side-bg-2:    hsl(20 12% 14%);
+    --side-border:  hsl(20 12% 18%);
+    --side-text:    hsl(30 18% 96%);
+    --side-text-2:  hsl(30 6% 64%);
+    --side-active-bg: hsl(16 45% 18%);
+    --side-active-text: hsl(16 60% 80%);
+
+    --font-sans:    "Inter", ui-sans-serif, system-ui, sans-serif;
+    --font-display: "Plus Jakarta Sans", "Inter", ui-sans-serif, system-ui, sans-serif;
+    --font-mono:    "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+
+    --shadow-xs:    0 1px 0 hsl(220 20% 10% / 0.04);
+    --shadow-sm:    0 1px 2px hsl(220 20% 10% / 0.06), 0 1px 0 hsl(220 20% 10% / 0.03);
+    --shadow-md:    0 4px 16px -8px hsl(220 20% 10% / 0.10), 0 1px 2px hsl(220 20% 10% / 0.05);
+    --shadow-brand: 0 10px 30px -12px hsl(16 65% 44% / 0.18);
   }
 }
 
@@ -40,6 +99,130 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-sans);
+    font-size: 14px;
+    line-height: 22px;
+    letter-spacing: -0.003em;
+    -webkit-font-smoothing: antialiased;
+  }
+  h1, h2, h3 {
+    font-family: var(--font-display);
+    letter-spacing: -0.01em;
   }
 }
+
+/* ── Utility classes ── */
+.font-display { font-family: var(--font-display); }
+.font-mono-ds { font-family: var(--font-mono); }
+.num { font-variant-numeric: tabular-nums; }
+
+/* ── Pill / status badge ── */
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11.5px;
+  font-weight: 500;
+  height: 22px;
+  padding: 0 9px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+.pill::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: currentColor;
+  opacity: 0.9;
+}
+.pill-ok     { background: var(--ok-soft);     color: var(--ok-ink); }
+.pill-warn   { background: var(--warn-soft);   color: var(--warn-ink); }
+.pill-danger { background: var(--danger-soft); color: var(--danger-ink); }
+.pill-info   { background: var(--info-soft);   color: var(--info-ink); }
+.pill-muted  { background: var(--surface-3);   color: var(--text-muted); }
+.pill-brand  { background: var(--p-soft);      color: var(--p-ink); }
+.pill-violet { background: var(--violet-soft); color: var(--violet-ink); }
+
+/* ── Plan tag ── */
+.plan-tag {
+  display: inline-flex;
+  align-items: center;
+  font-size: 11px;
+  font-weight: 500;
+  height: 20px;
+  padding: 0 7px;
+  border-radius: 5px;
+  font-family: var(--font-mono);
+  letter-spacing: 0.005em;
+}
+
+/* ── PA Table ── */
+.pa-tbl {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 13.5px;
+}
+.pa-tbl th {
+  text-align: left;
+  font-weight: 500;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--ds-border);
+  background: var(--surface-2);
+  position: sticky;
+  top: 0;
+}
+.pa-tbl td {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border-soft);
+  vertical-align: middle;
+}
+.pa-tbl tr:last-child td { border-bottom: 0; }
+.pa-tbl tbody tr:hover td { background: hsl(30 14% 95% / 0.7); }
+.pa-tbl tr.is-selected td { background: var(--p-soft-2); }
+
+/* ── Timeline ── */
+.pa-tl-row {
+  display: grid;
+  grid-template-columns: 96px 20px 1fr auto;
+  gap: 12px;
+  padding: 10px 0;
+  align-items: flex-start;
+  position: relative;
+}
+.pa-tl-rail {
+  position: relative;
+  display: flex;
+  justify-content: center;
+}
+.pa-tl-rail::before {
+  content: "";
+  position: absolute;
+  top: 18px;
+  bottom: -18px;
+  width: 1.5px;
+  background: var(--divider);
+}
+.pa-tl-row:last-child .pa-tl-rail::before { display: none; }
+.pa-tl-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  background: var(--surface);
+  border: 2px solid var(--text-faint);
+  margin-top: 6px;
+  z-index: 1;
+  flex-shrink: 0;
+}
+.pa-tl-dot.brand  { border-color: var(--p);      background: var(--p); }
+.pa-tl-dot.ok     { border-color: var(--ok);     background: var(--ok); }
+.pa-tl-dot.warn   { border-color: var(--warn);   background: var(--warn); }
+.pa-tl-dot.danger { border-color: var(--danger); background: var(--danger); }
+.pa-tl-dot.info   { border-color: var(--info);   background: var(--info); }

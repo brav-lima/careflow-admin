@@ -4,11 +4,11 @@ import { AdminTopBar } from './AdminTopBar'
 
 export function AdminLayout() {
   return (
-    <div className="flex h-screen bg-background">
+    <div style={{ display: 'flex', height: '100vh', width: '100%', background: 'var(--bg)', overflow: 'hidden' }}>
       <AdminSidebar />
-      <div className="flex flex-col flex-1 overflow-hidden">
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, overflow: 'hidden' }}>
         <AdminTopBar />
-        <main className="flex-1 overflow-y-auto p-6">
+        <main style={{ flex: 1, overflowY: 'auto', padding: 24 }}>
           <Outlet />
         </main>
       </div>
