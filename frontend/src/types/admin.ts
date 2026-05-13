@@ -78,6 +78,20 @@ export interface ConversionFunnel {
   deltaConversionRate: number
 }
 
+export interface KpiTrends {
+  months: number
+  mrr: number[]
+  activeOrgs: number[]
+  trialOrgs: number[]
+  suspendedOrgs: number[]
+  overdueInvoices: number[]
+  mrrDelta: number
+  activeOrgsDelta: number
+  trialOrgsDelta: number
+  suspendedOrgsDelta: number
+  overdueInvoicesDelta: number
+}
+
 export interface PaginatedResponse<T> {
   data: T[]
   total: number
