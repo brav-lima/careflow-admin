@@ -1,5 +1,5 @@
-import { NestFactory, Reflector } from '@nestjs/core'
-import { ValidationPipe, BadRequestException, ClassSerializerInterceptor } from '@nestjs/common'
+import { NestFactory } from '@nestjs/core'
+import { ValidationPipe, BadRequestException } from '@nestjs/common'
 import { DecimalSerializerInterceptor } from './common/interceptors/decimal-serializer.interceptor'
 import { ConfigService } from '@nestjs/config'
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger'
@@ -43,10 +43,7 @@ async function bootstrap() {
   app.enableCors({ origin: corsOrigin, credentials: true })
 
   app.useGlobalFilters(new GlobalExceptionFilter())
-  app.useGlobalInterceptors(
-    new DecimalSerializerInterceptor(),
-    new ClassSerializerInterceptor(app.get(Reflector)),
-  )
+  app.useGlobalInterceptors(new DecimalSerializerInterceptor())
 
   app.useGlobalPipes(
     new ValidationPipe({

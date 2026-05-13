@@ -58,7 +58,7 @@ export function SubscriptionsPage() {
     CANCELED:  allSubs.filter(s => s.status === 'CANCELED').length,
   }
 
-  const activeMrr = allSubs.filter(s => s.status === 'ACTIVE').reduce((s, x) => s + (x.plan?.priceMonthly ?? 0), 0)
+  const activeMrr = allSubs.filter(s => s.status === 'ACTIVE').reduce((s, x) => s + Number(x.plan?.priceMonthly ?? 0), 0)
 
   if (error) {
     return (
