@@ -2,15 +2,10 @@ import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import { api } from '@/lib/api'
 import { formatCurrency } from '@/lib/utils'
-import type { MetricsSummary, Organization, Invoice, PaginatedResponse } from '@/types/admin'
+import type { MetricsSummary, Organization, Invoice, PaginatedResponse, ConversionFunnel } from '@/types/admin'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Sparkline, OrgAvatar, StatusPill, PageHeader, Card, CardHeader } from '@/components/ui/ds'
 
-const MRR_TREND    = [184, 188, 192, 198, 205, 213, 220, 228, 234, 239, 245, 248]
-const ACTIVE_TREND = [108, 112, 117, 121, 124, 128, 131, 134, 137, 139, 141, 142]
-const TRIAL_TREND  = [14, 17, 22, 19, 18, 24, 26, 22, 21, 25, 23, 23]
-const SUSP_TREND   = [4, 5, 6, 5, 6, 7, 8, 8, 7, 8, 9, 8]
-const OVERDUE_TREND= [9, 10, 11, 13, 12, 14, 16, 15, 14, 16, 15, 14]
 
 const DownloadIcon = () => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" style={{ width: 14, height: 14 }}>
@@ -86,6 +81,11 @@ export function DashboardPage() {
     queryFn: () => api.get('/metrics/summary').then((r) => r.data),
   })
 
+  const { data: funnel } = useQuery<ConversionFunnel>({
+    queryKey: ['metrics-funnel'],
+    queryFn: () => api.get('/metrics/funnel').then((r) => r.data),
+  })
+
   const { data: recentOrgsResp } = useQuery<PaginatedResponse<Organization>>({
     queryKey: ['organizations', '', '', 1, 5],
     queryFn: () => api.get('/organizations', { params: { limit: 5 } }).then((r) => r.data),
@@ -98,7 +98,7 @@ export function DashboardPage() {
 
   const recentOrgs = recentOrgsResp?.data ?? []
   const overdueInvoices = overdueInvoicesResp?.data ?? []
-  const overdueTotal = overdueInvoices.reduce((s, i) => s + i.amount, 0)
+  const overdueTotal = overdueInvoices.reduce((s, i) => s + Number(i.amount), 0)
 
   if (isLoading) {
     return (
@@ -142,24 +142,24 @@ export function DashboardPage() {
         <KpiTile
           label="MRR (receita mensal)" currency
           value={mrr.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-          delta="+5,4%" deltaTone="up" trend={MRR_TREND} color="var(--ok-ink)"
+          delta="—" deltaTone="flat" trend={[]} color="var(--ok-ink)"
         />
-        <KpiTile label="Organizações ativas" value={String(data?.activeOrgs ?? 142)} delta="+3" deltaTone="up" trend={ACTIVE_TREND} color="var(--info-ink)"/>
-        <KpiTile label="Em trial" value={String(data?.trialOrgs ?? 23)} delta="−2" deltaTone="down" trend={TRIAL_TREND} color="var(--warn-ink)"/>
-        <KpiTile label="Suspensas" value={String(data?.suspendedOrgs ?? 8)} delta="−1" deltaTone="up" trend={SUSP_TREND} color="var(--warn-ink)"/>
+        <KpiTile label="Organizações ativas" value={String(data?.activeOrgs ?? 0)} delta="—" deltaTone="flat" trend={[]} color="var(--info-ink)"/>
+        <KpiTile label="Em trial" value={String(data?.trialOrgs ?? 0)} delta="—" deltaTone="flat" trend={[]} color="var(--warn-ink)"/>
+        <KpiTile label="Suspensas" value={String(data?.suspendedOrgs ?? 0)} delta="—" deltaTone="flat" trend={[]} color="var(--warn-ink)"/>
         <div style={{ padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: 6, minWidth: 0 }}>
           <div style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 500 }}>Faturas vencidas</div>
           <div style={{ fontFamily: 'var(--font-display)', fontSize: 28, fontWeight: 600, letterSpacing: '-0.022em', color: 'var(--danger)', fontVariantNumeric: 'tabular-nums', lineHeight: '32px' }}>
-            {data?.overdueInvoices ?? 14}
+            {data?.overdueInvoices ?? 0}
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, fontVariantNumeric: 'tabular-nums', fontWeight: 500 }}>
-            <span style={{ display: 'inline-flex', alignItems: 'center', padding: '1px 5px', borderRadius: 4, fontFamily: 'var(--font-mono)', fontSize: 11, background: 'var(--danger-soft)', color: 'var(--danger-ink)' }}>
-              ↑ +2
+            <span style={{ display: 'inline-flex', alignItems: 'center', padding: '1px 5px', borderRadius: 4, fontFamily: 'var(--font-mono)', fontSize: 11, background: 'var(--surface-3)', color: 'var(--text-muted)' }}>
+              • —
             </span>
             <span style={{ color: 'var(--text-faint)', fontWeight: 400 }}>vs mês anterior</span>
           </div>
           <div style={{ height: 30, marginTop: 4 }}>
-            <Sparkline data={OVERDUE_TREND} color="var(--danger-ink)" height={30} />
+            <Sparkline data={[]} color="var(--danger-ink)" height={30} />
           </div>
         </div>
       </div>
@@ -215,16 +215,35 @@ export function DashboardPage() {
 
         {/* Conversion funnel */}
         <Card>
-          <CardHeader title="Funil de conversão" subtitle="trial → ativo · 90 dias" />
+          <CardHeader title="Funil de conversão" subtitle={`trial → ativo · ${funnel?.periodDays ?? 90} dias`} />
           <div style={{ padding: 18, display: 'flex', flexDirection: 'column', gap: 14 }}>
-            <FunnelBar label="Trials iniciados"     count={86} pct={100} color="var(--info)" />
-            <FunnelBar label="Onboarding concluído" count={71} pct={82}  color="var(--p)" />
-            <FunnelBar label="Convertidas em ativa" count={54} pct={63}  color="var(--ok)" />
-            <FunnelBar label="Pagamento recorrente" count={49} pct={57}  color="hsl(110 50% 40%)" />
-            <div style={{ marginTop: 4, padding: '10px 12px', background: 'var(--surface-2)', borderRadius: 6, fontSize: 12, color: 'var(--text-2)', display: 'flex', justifyContent: 'space-between' }}>
-              <span>Taxa de conversão</span>
-              <span className="num" style={{ color: 'var(--ok-ink)', fontWeight: 600, fontFamily: 'var(--font-mono)' }}>62,8% ↑ 4,1pp</span>
-            </div>
+            {funnel ? (
+              <>
+                <FunnelBar label="Trials iniciados"     count={funnel.trialsStarted}       pct={100} color="var(--info)" />
+                {funnel.onboardingCompleted !== null && (
+                  <FunnelBar label="Onboarding concluído" count={funnel.onboardingCompleted}
+                    pct={funnel.trialsStarted > 0 ? Math.round((funnel.onboardingCompleted / funnel.trialsStarted) * 100) : 0}
+                    color="var(--p)" />
+                )}
+                <FunnelBar label="Convertidas em ativa" count={funnel.converted}
+                  pct={funnel.trialsStarted > 0 ? Math.round((funnel.converted / funnel.trialsStarted) * 100) : 0}
+                  color="var(--ok)" />
+                <FunnelBar label="Pagamento recorrente" count={funnel.withRecurringPayment}
+                  pct={funnel.trialsStarted > 0 ? Math.round((funnel.withRecurringPayment / funnel.trialsStarted) * 100) : 0}
+                  color="hsl(110 50% 40%)" />
+                <div style={{ marginTop: 4, padding: '10px 12px', background: 'var(--surface-2)', borderRadius: 6, fontSize: 12, color: 'var(--text-2)', display: 'flex', justifyContent: 'space-between' }}>
+                  <span>Taxa de conversão</span>
+                  <span className="num" style={{ color: funnel.deltaConversionRate >= 0 ? 'var(--ok-ink)' : 'var(--danger-ink)', fontWeight: 600, fontFamily: 'var(--font-mono)' }}>
+                    {funnel.conversionRate.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}%
+                    {' '}{funnel.deltaConversionRate >= 0 ? '↑' : '↓'} {Math.abs(funnel.deltaConversionRate).toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}pp
+                  </span>
+                </div>
+              </>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                {[1,2,3,4].map(i => <Skeleton key={i} className="h-8 w-full" />)}
+              </div>
+            )}
           </div>
         </Card>
       </div>
