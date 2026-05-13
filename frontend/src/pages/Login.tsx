@@ -2,11 +2,6 @@ import { useState, FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAdminAuth } from '@/contexts/AdminAuthContext'
 
-const KeyIcon = () => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" style={{ width: 15, height: 15, flexShrink: 0, paddingTop: 1 }}>
-    <circle cx="8" cy="15" r="4"/><path d="m10.8 12.2 9.2-9.2M16 6l3 3"/>
-  </svg>
-)
 
 export function LoginPage() {
   const { login } = useAdminAuth()
@@ -192,25 +187,6 @@ export function LoginPage() {
               {loading ? 'Entrando…' : 'Entrar →'}
             </button>
           </form>
-
-          {/* SSO info */}
-          <div
-            style={{
-              padding: '12px 14px', borderRadius: 10,
-              background: 'var(--surface-2)', border: '1px solid var(--border-soft)',
-              fontSize: 12.5, color: 'var(--text-muted)',
-              display: 'flex', gap: 10, alignItems: 'flex-start',
-            }}
-          >
-            <span style={{ color: 'var(--info-ink)' }}><KeyIcon /></span>
-            <div>
-              <div style={{ color: 'var(--text-2)', fontWeight: 500 }}>Acesso por SSO corporativo</div>
-              <div style={{ marginTop: 2 }}>
-                Sessão validada via JWT em cookie httpOnly.{' '}
-                <a href="#" style={{ color: 'var(--p)', textDecoration: 'none', fontWeight: 500 }}>Saiba mais</a>
-              </div>
-            </div>
-          </div>
         </div>
       </div>
     </div>
