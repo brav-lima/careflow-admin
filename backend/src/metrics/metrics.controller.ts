@@ -25,6 +25,13 @@ export class MetricsController {
     return this.metricsService.getRevenueByYear(Number(year) || new Date().getFullYear())
   }
 
+  @Get('funnel')
+  @Roles('SUPER_ADMIN', 'FINANCE')
+  @ApiQuery({ name: 'days', required: false, type: Number })
+  getFunnel(@Query('days') days?: number) {
+    return this.metricsService.getConversionFunnel(Number(days) || 90)
+  }
+
   @Get('organizations')
   @Roles('SUPER_ADMIN', 'FINANCE')
   @ApiQuery({ name: 'period', required: false, enum: ['week', 'month', 'year'] })

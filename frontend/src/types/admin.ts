@@ -68,6 +68,16 @@ export interface MetricsSummary {
   overdueInvoices: number
 }
 
+export interface ConversionFunnel {
+  periodDays: number
+  trialsStarted: number
+  onboardingCompleted: number | null
+  converted: number
+  withRecurringPayment: number
+  conversionRate: number
+  deltaConversionRate: number
+}
+
 export interface PaginatedResponse<T> {
   data: T[]
   total: number

@@ -50,6 +50,47 @@ export class MetricsService {
     return monthly
   }
 
+  async getConversionFunnel(days: number) {
+    const now = new Date()
+    const periodStart = new Date(now.getTime() - days * 24 * 60 * 60 * 1000)
+    const prevPeriodStart = new Date(now.getTime() - 2 * days * 24 * 60 * 60 * 1000)
+
+    const [currentSubs, prevSubs] = await this.prisma.$transaction([
+      this.prisma.subscription.findMany({
+        where: { startDate: { gte: periodStart, lte: now } },
+        select: {
+          status: true,
+          invoices: { where: { status: 'PAID' }, select: { id: true } },
+        },
+      }),
+      this.prisma.subscription.findMany({
+        where: { startDate: { gte: prevPeriodStart, lt: periodStart } },
+        select: { status: true },
+      }),
+    ])
+
+    const trialsStarted = currentSubs.length
+    const converted = currentSubs.filter((s) => s.status === 'ACTIVE').length
+    const withRecurringPayment = currentSubs.filter((s) => s.invoices.length >= 2).length
+
+    const prevTrialsStarted = prevSubs.length
+    const prevConverted = prevSubs.filter((s) => s.status === 'ACTIVE').length
+
+    const conversionRate = trialsStarted > 0 ? (converted / trialsStarted) * 100 : 0
+    const prevConversionRate = prevTrialsStarted > 0 ? (prevConverted / prevTrialsStarted) * 100 : 0
+    const deltaConversionRate = conversionRate - prevConversionRate
+
+    return {
+      periodDays: days,
+      trialsStarted,
+      onboardingCompleted: null,
+      converted,
+      withRecurringPayment,
+      conversionRate: Math.round(conversionRate * 10) / 10,
+      deltaConversionRate: Math.round(deltaConversionRate * 10) / 10,
+    }
+  }
+
   async getOrganizationsByPeriod(period: 'week' | 'month' | 'year' = 'month') {
     const now = new Date()
     const ranges = {
