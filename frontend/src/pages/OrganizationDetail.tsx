@@ -176,7 +176,7 @@ export function OrganizationDetailPage() {
             <div style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 500, marginBottom: 6 }}>MRR contratado</div>
             <div style={{ fontFamily: 'var(--font-display)', fontSize: 24, fontWeight: 600, letterSpacing: '-0.02em', color: 'var(--text)', fontVariantNumeric: 'tabular-nums' }}>
               <span style={{ fontSize: 14, color: 'var(--text-muted)', fontWeight: 500, marginRight: 2 }}>R$</span>
-              {activeSubscription.plan?.priceMonthly.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) ?? '—'}
+              {activeSubscription.plan ? Number(activeSubscription.plan.priceMonthly).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '—'}
             </div>
             <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4 }}>
               Recorrência mensal · plano {activeSubscription.plan?.name}
