@@ -74,7 +74,7 @@ function PlanCard({ plan, isHighlight }: { plan: Plan; isHighlight: boolean }) {
         <div style={{ marginTop: 18, display: 'flex', alignItems: 'baseline', gap: 4 }}>
           <span style={{ fontSize: 13, color: 'var(--text-muted)', fontWeight: 500 }}>R$</span>
           <span className="num" style={{ fontSize: 36, fontWeight: 600, letterSpacing: '-0.025em', lineHeight: 1, fontVariantNumeric: 'tabular-nums', fontFamily: 'var(--font-display)', color: 'var(--text)' }}>
-            {plan.priceMonthly.toLocaleString('pt-BR')}
+            {Math.trunc(Number(plan.priceMonthly)).toLocaleString('pt-BR')}
           </span>
           <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>,00 / mês</span>
         </div>
