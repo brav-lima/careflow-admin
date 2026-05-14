@@ -80,6 +80,7 @@ model Organization {
   updatedAt  DateTime  @updatedAt @map("updated_at")
 
   subscriptions Subscription[]
+  events        OrgEvent[]
 
   @@index([status])
   @@index([clinicExternalId])
@@ -147,6 +148,39 @@ enum InvoiceStatus {
   PAID
   OVERDUE
   CANCELED
+}
+
+// ──────────────────────────────────────────────
+// OrgEvent — timeline de eventos do ciclo de vida de uma organização
+// ──────────────────────────────────────────────
+
+enum OrgEventType {
+  ORG_CREATED
+  STATUS_CHANGED
+  SUBSCRIPTION_STARTED
+  SUBSCRIPTION_CANCELED
+  PLAN_CHANGED
+  TRIAL_STARTED
+  TRIAL_CONVERTED
+  INVOICE_PAID
+  INVOICE_OVERDUE
+  USER_ADDED
+  USER_REMOVED
+  PASSWORD_RESET
+}
+
+model OrgEvent {
+  id             String       @id @default(uuid())
+  organizationId String       @map("organization_id")
+  type           OrgEventType
+  payload        Json?
+  actorId        String?      @map("actor_id")
+  createdAt      DateTime     @default(now()) @map("created_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, createdAt(sort: Desc)])
+  @@map("org_events")
 }
 
 model Invoice {

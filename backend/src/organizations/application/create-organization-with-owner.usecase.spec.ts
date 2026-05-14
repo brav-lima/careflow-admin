@@ -7,6 +7,7 @@ import { IOrganizationRepository } from '../domain/organization.repository'
 import { ClinicApiService } from '../../clinic-api/clinic-api.service'
 import { PrismaService } from '../../prisma/prisma.service'
 import { ResolveTrialPlan } from './resolve-trial-plan'
+import { OrgEventService } from './org-event.service'
 import { Organization } from '../domain/organization.entity'
 
 const makeOrg = (overrides: Partial<Organization> = {}): Organization => ({
@@ -72,6 +73,7 @@ describe('CreateOrganizationWithOwnerUseCase', () => {
   let clinicApi: jest.Mocked<ClinicApiService>
   let prisma: jest.Mocked<Pick<PrismaService, '$transaction' | 'plan'>>
   let resolveTrialPlan: jest.Mocked<ResolveTrialPlan>
+  let orgEvents: jest.Mocked<OrgEventService>
   let sut: CreateOrganizationWithOwnerUseCase
   let tx: ReturnType<typeof makeTx>
 
@@ -99,12 +101,14 @@ describe('CreateOrganizationWithOwnerUseCase', () => {
       plan: { findUniqueOrThrow: jest.fn().mockResolvedValue({ maxUsers: 5, maxPatients: 100 }) } as any,
     }
     resolveTrialPlan = { planId: jest.fn().mockResolvedValue('plan-trial-id') } as any
+    orgEvents = { record: jest.fn().mockResolvedValue(undefined), list: jest.fn() } as any
 
     sut = new CreateOrganizationWithOwnerUseCase(
       repo as any,
       clinicApi,
       prisma as any,
       resolveTrialPlan,
+      orgEvents,
     )
   })
 

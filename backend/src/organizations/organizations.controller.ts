@@ -15,6 +15,7 @@ import { UpdateOrgStatusUseCase } from './application/update-status.usecase'
 import { ListOrganizationsUseCase } from './application/list-organizations.usecase'
 import { ResetClinicUserPasswordUseCase } from './application/reset-clinic-user-password.usecase'
 import { ResolveClinicId } from './application/resolve-clinic-id'
+import { OrgEventService } from './application/org-event.service'
 import { CreateOrganizationDto } from './dto/create-organization.dto'
 import { CreateOrganizationWithOwnerDto } from './dto/create-organization-with-owner.dto'
 import { UpdateOrganizationDto, UpdateOrgStatusDto } from './dto/update-organization.dto'
@@ -36,6 +37,7 @@ export class OrganizationsController {
     private readonly resetClinicUserPassword: ResetClinicUserPasswordUseCase,
     private readonly resolveClinicId: ResolveClinicId,
     private readonly clinicApi: ClinicApiService,
+    private readonly orgEvents: OrgEventService,
     @Inject(ORGANIZATION_REPOSITORY)
     private readonly repo: IOrganizationRepository,
   ) {}
@@ -95,6 +97,18 @@ export class OrganizationsController {
   @Roles('SUPER_ADMIN')
   remove(@Param('id', ParseUUIDPipe) id: string) {
     return this.repo.delete(id)
+  }
+
+  // ─── Timeline de eventos ─────────────────────────────────────
+
+  @Get(':id/events')
+  @Roles('SUPER_ADMIN', 'SUPPORT')
+  @ApiQuery({ name: 'limit', required: false, type: Number })
+  listEvents(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Query('limit') limit?: number,
+  ) {
+    return this.orgEvents.list(id, Number(limit) || 20)
   }
 
   // ─── Usuários da clínica (via clinic-api) ───────────────────
