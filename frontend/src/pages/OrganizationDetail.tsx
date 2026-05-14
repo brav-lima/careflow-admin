@@ -170,7 +170,7 @@ export function OrganizationDetailPage() {
       </div>
 
       {/* Stat strip */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', background: 'var(--surface)', border: '1px solid var(--ds-border)', borderRadius: 12, overflow: 'hidden' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: `repeat(${org.userCount != null ? 5 : 4}, 1fr)`, background: 'var(--surface)', border: '1px solid var(--ds-border)', borderRadius: 12, overflow: 'hidden' }}>
         {activeSubscription && (
           <div style={{ padding: '16px 20px', borderRight: '1px solid var(--divider)' }}>
             <div style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 500, marginBottom: 6 }}>MRR contratado</div>
@@ -197,12 +197,24 @@ export function OrganizationDetailPage() {
             </div>
           </div>
         )}
-        <div style={{ padding: '16px 20px' }}>
+        <div style={{ padding: '16px 20px', borderRight: org.userCount != null ? '1px solid var(--divider)' : undefined }}>
           <div style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 500, marginBottom: 6 }}>Cadastro</div>
           <div style={{ fontFamily: 'var(--font-display)', fontSize: 16, fontWeight: 600, color: 'var(--text)' }}>
             {formatDate(org.createdAt)}
           </div>
         </div>
+        {org.userCount != null && (
+          <div style={{ padding: '16px 20px' }}>
+            <div style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 500, marginBottom: 6 }}>Usuários</div>
+            <div style={{ fontFamily: 'var(--font-display)', fontSize: 24, fontWeight: 600, letterSpacing: '-0.02em', color: 'var(--text)', fontVariantNumeric: 'tabular-nums' }}>
+              {org.userCount}
+              {activeSubscription?.plan?.maxUsers != null && (
+                <span style={{ fontSize: 14, color: 'var(--text-muted)', fontWeight: 500, marginLeft: 4 }}>/ {activeSubscription.plan.maxUsers}</span>
+              )}
+            </div>
+            <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4 }}>Usuários ativos na clínica</div>
+          </div>
+        )}
       </div>
 
       {/* Two-col layout */}

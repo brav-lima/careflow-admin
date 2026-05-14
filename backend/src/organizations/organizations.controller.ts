@@ -75,8 +75,21 @@ export class OrganizationsController {
 
   @Get(':id')
   @Roles('SUPER_ADMIN', 'SUPPORT')
-  findOne(@Param('id', ParseUUIDPipe) id: string) {
-    return this.repo.findById(id)
+  async findOne(@Param('id', ParseUUIDPipe) id: string) {
+    const org = await this.repo.findById(id)
+    if (!org) return null
+
+    let userCount: number | null = null
+    if (org.clinicExternalId) {
+      try {
+        const users = await this.clinicApi.listClinicUsers(org.clinicExternalId)
+        userCount = users.length
+      } catch {
+        // clinic-api unavailable — return null, don't break the page
+      }
+    }
+
+    return { ...org, userCount }
   }
 
   @Patch(':id')
