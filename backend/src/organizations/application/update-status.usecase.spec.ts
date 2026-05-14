@@ -2,7 +2,6 @@ import { NotFoundException } from '@nestjs/common'
 import { UpdateOrgStatusUseCase } from './update-status.usecase'
 import { IOrganizationRepository } from '../domain/organization.repository'
 import { ClinicApiService } from '../../clinic-api/clinic-api.service'
-import { OrgEventService } from './org-event.service'
 import { Organization, OrgStatus } from '../domain/organization.entity'
 
 const makeOrg = (overrides: Partial<Organization> = {}): Organization => ({
