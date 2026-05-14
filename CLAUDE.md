@@ -58,7 +58,9 @@ Pelvi Admin is a full-stack SaaS admin dashboard for managing clinic organizatio
 
 **Package manager**: **Bun** (`bun.lock` is the lockfile of record in both `backend/` and `frontend/`). Do not commit `package-lock.json`.
 
-See the parent `CLAUDE.md` for how this project talks to `pelvi-ui` (shared `INTERNAL_API_KEY`, no cross-DB FKs — integration is HTTP-only via the `clinic-api/` module).
+Integration with pelvi-ui: two HTTP channels, no cross-DB FKs.
+- **admin→clinic** (`clinic-api/`): pelvi-admin calls pelvi-ui `/api/internal/*` using `CLINIC_INTERNAL_API_KEY` as `x-internal-api-key`.
+- **clinic→admin** (`clinic-ext/`): pelvi-ui backend proxies authenticated clinic requests to `/api/clinic-ext/*` using `CLINIC_EXTERNAL_API_KEY` as `x-clinic-api-key`. `clinicId` (= pelvi-ui `organizationId`) is extracted from the clinic JWT server-side — never from the browser.
 
 ---
 
@@ -101,7 +103,8 @@ Copy `backend/.env.example` to `backend/.env.dev` and populate:
 | `PORT` | Backend port (default 3001) |
 | `CORS_ORIGIN` | Frontend URL for CORS (required in production) |
 | `CLINIC_API_URL` | Base URL of the pelvi-ui clinic API (e.g. `http://localhost:3000`). Admin appends `/api/internal/*` — do **not** include the path prefix. |
-| `CLINIC_INTERNAL_API_KEY` | Shared secret for clinic API requests (`x-internal-api-key` header). Must match `INTERNAL_API_KEY` on the clinic side. Rotation policy: every 90 days or immediately on suspected compromise. |
+| `CLINIC_INTERNAL_API_KEY` | Shared secret for admin→clinic calls (`x-internal-api-key` header). Must match `INTERNAL_API_KEY` on the clinic side. Rotation policy: every 90 days or immediately on suspected compromise. |
+| `CLINIC_EXTERNAL_API_KEY` | Shared secret for clinic→admin calls accepted on `x-clinic-api-key` header. Must match `ADMIN_EXTERNAL_API_KEY` in pelvi-ui. Same rotation policy. |
 
 ### Docker
 
@@ -119,7 +122,7 @@ React SPA (React Router DOM 7) with:
 - **HTTP client**: `lib/api.ts` — Axios instance with `withCredentials: true` (sends cookies automatically). Interceptor handles 401 → automatic refresh via `POST /auth/refresh` → retry once; on refresh failure redirects to `/login`.
 - **Toast**: `contexts/ToastContext.tsx` — `useToast()` with `toast.success/error`; use `getErrorMessage(err)` from `lib/utils.ts` to extract server messages.
 - **Forms**: React Hook Form + Zod validation (including `superRefine` for conditional validation in multi-mode forms).
-- **Styling**: Tailwind CSS with CSS variable-based theming; `ui/` primitives are Radix UI wrappers.
+- **Styling**: Tailwind CSS with CSS variable-based theming (`src/index.css`); `ui/` primitives are Radix UI wrappers.
 - **Error states**: all list pages (`Dashboard`, `Organizations`, `Invoices`, `Subscriptions`) show a red error banner when the query fails — never an infinite skeleton.
 
 **Routing**: Protected by `components/auth/ProtectedRoute.tsx`. Layout routes under `/` render `AdminLayout` → `AdminSidebar` + `AdminTopBar` with nested pages (Dashboard, Organizations, OrganizationDetail, Plans, Subscriptions, Invoices).
@@ -131,6 +134,51 @@ React SPA (React Router DOM 7) with:
 **Formatters** (`lib/utils.ts`): `formatCurrency`, `formatDate`, `formatCNPJ`, `formatCPF`, `getErrorMessage`, `cn` (tailwind-merge).
 
 **Frontend types** (`src/types/admin.ts`): `AdminUser`, `Organization`, `Plan`, `Subscription`, `Invoice`, `MetricsSummary`, `PaginatedResponse<T>`. `PaginatedResponse<T>` is `{ data: T[], total: number }` — used by Organizations. Invoices/Subscriptions return an extended shape `{ data, total, page, limit }`.
+
+### Typography System
+
+Shared across all Pelvi products (pelvi-ui, pelvi-admin, pelvi-landing-page):
+
+- **Body / `font-sans`** → `Inter` — loaded from Google Fonts (400–700), via `src/routes/__root.tsx`
+- **Headings / `font-display`** → `Plus Jakarta Sans` — loaded from Google Fonts (500–800)
+- CSS vars defined in `frontend/src/index.css` `:root`: `--font-sans`, `--font-display`, `--font-mono`
+- Tailwind fontFamily: `sans: ['var(--font-sans)']`, `display: ['var(--font-display)']`, `mono: ['var(--font-mono)']`
+- `h1–h3` automatically use `--font-display` with `letter-spacing: -0.01em`
+- Utility classes: `.font-display`, `.font-mono-ds`, `.num` (tabular numerals)
+
+### Layout System
+
+`AdminLayout` (`frontend/src/components/layout/AdminLayout.tsx`):
+- Flex row: `AdminSidebar` (240px fixed) + content column (`AdminTopBar` + `<main>`)
+- No collapse — sidebar always visible at 240px
+- Inline CSS vars throughout (`var(--side-bg)`, `var(--bg)`, `var(--text)`, etc.) — defined in `index.css`
+
+`AdminSidebar` details:
+- Fixed width 240px, dark background (`var(--side-bg)`)
+- Brand section: 32×32 "P" logo + "Pelvi Admin" title + "Back office" subtitle
+- Section labels: "Operação" (nav items) and "Sistema" (settings) — uppercase 10.5px
+- Nav items: 13.5px font, 8px padding, border-radius 8px, inline hover/active states via `onMouseEnter`/`onMouseLeave`
+- Badge on "Faturas" showing overdue invoice count (from `metrics/summary` query)
+- User footer: hash-color avatar (seeded from name) + name + role — same algorithm as pelvi-ui
+- Custom inline SVG icons (no Lucide dependency in sidebar)
+
+`AdminTopBar` details:
+- Height 56px, `border-bottom`, `var(--surface)` background
+- Left: breadcrumbs derived from URL path segments (UUIDs replaced with `…`)
+- Center-right: search bar placeholder (⌘K kbd), 280px min-width
+- Right: bell icon + divider + "Senha" button (opens ChangePasswordModal) + "Sair" button
+
+### Pages
+
+| Page | Route | Notes |
+|------|-------|-------|
+| Login | `/login` | Email + password, dynamic API health status indicator |
+| Dashboard | `/dashboard` | KPI tiles with sparklines and period deltas (MRR, active orgs, revenue) |
+| Organizations | `/organizations` | List with MRR per org, status badge, search/filter |
+| OrganizationDetail | `/organizations/:id` | Users, subscription, invoices per org |
+| Plans | `/plans` | Plan CRUD with pricing and limits |
+| Subscriptions | `/subscriptions` | Paginated list, status filter |
+| Invoices | `/invoices` | Paginated list, overdue badge, status filter |
 
 ### Backend (`backend/src/`)
 
@@ -159,10 +207,14 @@ Login issues both cookies server-side; logout clears them and revokes the refres
 - `application/` — use cases (single-responsibility classes)
 - `infra/` — Prisma repository implementations
 
-**External integration (`clinic-api/`)**: `ClinicApiService` is the single seam for HTTP calls to pelvi-ui using `CLINIC_INTERNAL_API_KEY` as `x-internal-api-key`. It:
+**External integration — admin→clinic (`clinic-api/`)**: `ClinicApiService` is the single seam for HTTP calls to pelvi-ui using `CLINIC_INTERNAL_API_KEY` as `x-internal-api-key`. It:
 - Appends `/api/internal/*` to `CLINIC_API_URL` — do **not** include that path in the env var.
 - Uses a `buildUrl` tagged-template helper that `encodeURIComponent`-s every dynamic segment and asserts `URL.origin` matches the configured base — blocks SSRF/path-traversal.
 - Supported operations: clinic create/list, access update, person upsert, link person to clinic (ADMIN/PROFESSIONAL/RECEPTIONIST), list/update/reset-password clinic users.
+
+**External integration — clinic→admin (`clinic-ext/`)**: exposes read-only endpoints under `/api/clinic-ext/*` for pelvi-ui backend to proxy subscription data to authenticated clinic users. Guard: `ClinicExternalApiKeyGuard` validates `x-clinic-api-key` against `CLINIC_EXTERNAL_API_KEY`. Endpoints:
+- `GET /api/clinic-ext/subscription?clinicId=<uuid>` — subscription + plan for an org (looked up by `clinicExternalId`)
+- `GET /api/clinic-ext/plans` — active plans list
 
 **Organizations module** (`organizations/application/`):
 - `create-organization-with-owner.usecase.ts` — **standard org creation flow**: creates Clinic in pelvi-ui → upserts Person by CPF → links as ADMIN → persists Organization locally → creates TRIAL Subscription (+14 days) → propagates plan limits to pelvi-ui. Returns `{ organization, owner, subscription, provisionalPassword }`. Reusing an existing CPF returns `provisionalPassword: null` and `owner.reused: true`.

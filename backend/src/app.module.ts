@@ -10,6 +10,7 @@ import { InvoicesModule } from './invoices/invoices.module'
 import { MetricsModule } from './metrics/metrics.module'
 import { ClinicApiModule } from './clinic-api/clinic-api.module'
 import { VersionModule } from './version/version.module'
+import { ClinicExtModule } from './clinic-ext/clinic-ext.module'
 import { CorrelationIdMiddleware } from './common/correlation/correlation-id.middleware'
 
 @Module({
@@ -32,6 +33,7 @@ import { CorrelationIdMiddleware } from './common/correlation/correlation-id.mid
     InvoicesModule,
     MetricsModule,
     VersionModule,
+    ClinicExtModule,
   ],
 })
 export class AppModule implements NestModule {
