@@ -22,6 +22,7 @@ export interface Organization {
   createdAt: string
   updatedAt: string
   mrr: number | null
+  userCount?: number | null
 }
 
 export interface Plan {
