@@ -1,10 +1,12 @@
 import { ResetClinicUserPasswordUseCase } from './reset-clinic-user-password.usecase'
 import { ClinicApiService } from '../../clinic-api/clinic-api.service'
 import { ResolveClinicId } from './resolve-clinic-id'
+import { OrgEventService } from './org-event.service'
 
 describe('ResetClinicUserPasswordUseCase', () => {
   let clinicApi: jest.Mocked<ClinicApiService>
   let resolveClinicId: jest.Mocked<ResolveClinicId>
+  let orgEvents: jest.Mocked<OrgEventService>
   let sut: ResetClinicUserPasswordUseCase
 
   beforeEach(() => {
@@ -14,7 +16,8 @@ describe('ResetClinicUserPasswordUseCase', () => {
     resolveClinicId = {
       byOrganizationId: jest.fn().mockResolvedValue('clinic-1'),
     } as any
-    sut = new ResetClinicUserPasswordUseCase(clinicApi, resolveClinicId)
+    orgEvents = { record: jest.fn().mockResolvedValue(undefined), list: jest.fn() } as any
+    sut = new ResetClinicUserPasswordUseCase(clinicApi, resolveClinicId, orgEvents)
   })
 
   it('resolves clinic ID from organization ID before calling the API', async () => {

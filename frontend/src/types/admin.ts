@@ -98,3 +98,26 @@ export interface PaginatedResponse<T> {
   data: T[]
   total: number
 }
+
+export type OrgEventType =
+  | 'ORG_CREATED'
+  | 'STATUS_CHANGED'
+  | 'SUBSCRIPTION_STARTED'
+  | 'SUBSCRIPTION_CANCELED'
+  | 'PLAN_CHANGED'
+  | 'TRIAL_STARTED'
+  | 'TRIAL_CONVERTED'
+  | 'INVOICE_PAID'
+  | 'INVOICE_OVERDUE'
+  | 'USER_ADDED'
+  | 'USER_REMOVED'
+  | 'PASSWORD_RESET'
+
+export interface OrgEvent {
+  id: string
+  organizationId: string
+  type: OrgEventType
+  payload: Record<string, unknown> | null
+  actorId: string | null
+  createdAt: string
+}

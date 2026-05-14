@@ -6,6 +6,7 @@ import type { Organization, OrgStatus, Subscription, Invoice } from '@/types/adm
 import { Skeleton } from '@/components/ui/skeleton'
 import { useToast } from '@/contexts/ToastContext'
 import { ClinicUsersSection } from '@/components/organizations/ClinicUsersSection'
+import { OrgTimeline } from '@/components/organizations/OrgTimeline'
 import { OrgAvatar, StatusPill, PlanBadge, Card, CardHeader } from '@/components/ui/ds'
 
 const BackIcon = () => (
@@ -244,8 +245,9 @@ export function OrganizationDetailPage() {
           {org.clinicExternalId && <ClinicUsersSection organizationId={org.id} />}
         </div>
 
-        {/* Right: invoice history as timeline stand-in */}
+        {/* Right: timeline + invoice history */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <OrgTimeline organizationId={org.id} />
           {invoices && invoices.length > 0 && (
             <Card>
               <CardHeader

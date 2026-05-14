@@ -49,7 +49,8 @@ describe('UpdateOrgStatusUseCase', () => {
       resetClinicUserPassword: jest.fn(),
     } as any
     prisma = makePrisma()
-    sut = new UpdateOrgStatusUseCase(repo as any, clinicApi, prisma as any)
+    const orgEvents = { record: jest.fn().mockResolvedValue(undefined), list: jest.fn() } as any
+    sut = new UpdateOrgStatusUseCase(repo as any, clinicApi, prisma as any, orgEvents)
   })
 
   it('throws NotFoundException when organization does not exist', async () => {
@@ -89,7 +90,8 @@ describe('UpdateOrgStatusUseCase', () => {
   it('passes plan limits from active subscription to updateClinicAccess', async () => {
     const sub = { plan: { maxUsers: 10, maxPatients: 500 } }
     prisma = makePrisma(sub)
-    sut = new UpdateOrgStatusUseCase(repo as any, clinicApi, prisma as any)
+    const orgEventsLocal = { record: jest.fn().mockResolvedValue(undefined), list: jest.fn() } as any
+    sut = new UpdateOrgStatusUseCase(repo as any, clinicApi, prisma as any, orgEventsLocal)
 
     repo.findById.mockResolvedValue(makeOrg())
     repo.update.mockResolvedValue(makeOrg())

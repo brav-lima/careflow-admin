@@ -3,6 +3,7 @@ import { IOrganizationRepository, ORGANIZATION_REPOSITORY } from '../domain/orga
 import { Organization, OrgStatus } from '../domain/organization.entity'
 import { ClinicApiService, ClinicAccessStatus } from '../../clinic-api/clinic-api.service'
 import { PrismaService } from '../../prisma/prisma.service'
+import { OrgEventService } from './org-event.service'
 
 const orgStatusToClinicAccess: Record<OrgStatus, ClinicAccessStatus> = {
   ACTIVE: 'ACTIVE',
@@ -17,6 +18,7 @@ export class UpdateOrgStatusUseCase {
     private readonly repo: IOrganizationRepository,
     private readonly clinicApi: ClinicApiService,
     private readonly prisma: PrismaService,
+    private readonly orgEvents: OrgEventService,
   ) {}
 
   async execute(id: string, status: OrgStatus): Promise<Organization> {
@@ -40,6 +42,11 @@ export class UpdateOrgStatusUseCase {
       )
     }
 
-    return this.repo.update(id, { status })
+    const updated = await this.repo.update(id, { status })
+    await this.orgEvents.record(id, 'STATUS_CHANGED', {
+      from: org.status,
+      to: status,
+    })
+    return updated
   }
 }

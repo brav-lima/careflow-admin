@@ -5,6 +5,7 @@ import { ClinicApiService } from '../../clinic-api/clinic-api.service'
 import { PrismaService } from '../../prisma/prisma.service'
 import { ResolveTrialPlan } from './resolve-trial-plan'
 import { generateProvisionalPassword } from './provisional-password'
+import { OrgEventService } from './org-event.service'
 
 export interface CreateOrganizationWithOwnerInput {
   organizationType: 'CLINIC_PJ' | 'SOLO_PF'
@@ -50,6 +51,7 @@ export class CreateOrganizationWithOwnerUseCase {
     private readonly clinicApi: ClinicApiService,
     private readonly prisma: PrismaService,
     private readonly resolveTrialPlan: ResolveTrialPlan,
+    private readonly orgEvents: OrgEventService,
   ) {}
 
   async execute(input: CreateOrganizationWithOwnerInput): Promise<CreateOrganizationWithOwnerResult> {
@@ -148,6 +150,16 @@ export class CreateOrganizationWithOwnerUseCase {
     await this.clinicApi.updateClinicAccess(clinic.clinicId, 'ACTIVE', {
       maxUsers: plan.maxUsers,
       maxPatients: plan.maxPatients,
+    })
+
+    await this.orgEvents.record(organization.id, 'ORG_CREATED', {
+      document,
+      documentType,
+      clinicId: clinic.clinicId,
+    })
+    await this.orgEvents.record(organization.id, 'TRIAL_STARTED', {
+      planId: trialPlanId,
+      trialEndsAt: trialEndsAt.toISOString(),
     })
 
     if (personResp.reused) {
