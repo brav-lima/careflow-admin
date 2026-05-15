@@ -23,12 +23,12 @@ export function AdminAuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const login = async (email: string, password: string) => {
-    const { data } = await api.post('/auth/login', { email, password })
+    const { data } = await api.post('/auth/sessions', { email, password })
     setUser(data.user)
   }
 
   const logout = async () => {
-    await api.post('/auth/logout').catch(() => null)
+    await api.delete('/auth/sessions').catch(() => null)
     setUser(null)
     window.location.href = '/login'
   }

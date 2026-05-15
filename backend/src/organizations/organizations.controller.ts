@@ -1,6 +1,6 @@
 import {
   Controller, Get, Post, Patch, Delete,
-  Body, Param, ParseUUIDPipe, Query, UseGuards,
+  Body, Param, ParseUUIDPipe, Query, UseGuards, NotFoundException,
 } from '@nestjs/common'
 import { ApiBearerAuth, ApiTags, ApiQuery } from '@nestjs/swagger'
 import { Throttle } from '@nestjs/throttler'
@@ -17,8 +17,9 @@ import { ResetClinicUserPasswordUseCase } from './application/reset-clinic-user-
 import { ResolveClinicId } from './application/resolve-clinic-id'
 import { OrgEventService } from './application/org-event.service'
 import { CreateOrganizationDto } from './dto/create-organization.dto'
-import { CreateOrganizationWithOwnerDto } from './dto/create-organization-with-owner.dto'
-import { UpdateOrganizationDto, UpdateOrgStatusDto } from './dto/update-organization.dto'
+import { CreateOrganizationInputDto } from './dto/create-organization-input.dto'
+import { OrganizationType } from './dto/create-organization-with-owner.dto'
+import { UpdateOrganizationDto } from './dto/update-organization.dto'
 import { UpdateClinicUserDto } from './dto/update-clinic-user.dto'
 import { Inject } from '@nestjs/common'
 import { IOrganizationRepository, ORGANIZATION_REPOSITORY } from './domain/organization.repository'
@@ -50,14 +51,18 @@ export class OrganizationsController {
 
   @Post()
   @Roles('SUPER_ADMIN', 'SUPPORT')
-  create(@Body() dto: CreateOrganizationDto) {
-    return this.createOrg.execute(dto)
-  }
-
-  @Post('with-owner')
-  @Roles('SUPER_ADMIN', 'SUPPORT')
-  createWithOwner(@Body() dto: CreateOrganizationWithOwnerDto) {
-    return this.createOrgWithOwner.execute(dto)
+  create(@Body() dto: CreateOrganizationInputDto) {
+    if (dto.owner) {
+      return this.createOrgWithOwner.execute({
+        organizationType: dto.organizationType ?? OrganizationType.CLINIC_PJ,
+        name: dto.name,
+        document: dto.document,
+        email: dto.email,
+        phone: dto.phone,
+        owner: dto.owner,
+      })
+    }
+    return this.createOrg.execute(dto as CreateOrganizationDto)
   }
 
   @Get()
@@ -79,7 +84,7 @@ export class OrganizationsController {
   @Roles('SUPER_ADMIN', 'SUPPORT')
   async findOne(@Param('id', ParseUUIDPipe) id: string) {
     const org = await this.repo.findById(id)
-    if (!org) return null
+    if (!org) throw new NotFoundException('Organização não encontrada')
 
     let userCount: number | null = null
     if (org.clinicExternalId) {
@@ -96,14 +101,11 @@ export class OrganizationsController {
 
   @Patch(':id')
   @Roles('SUPER_ADMIN', 'SUPPORT')
-  update(@Param('id', ParseUUIDPipe) id: string, @Body() dto: UpdateOrganizationDto) {
+  async update(@Param('id', ParseUUIDPipe) id: string, @Body() dto: UpdateOrganizationDto) {
+    if (dto.status) {
+      return this.updateOrgStatus.execute(id, dto.status)
+    }
     return this.repo.update(id, dto)
-  }
-
-  @Patch(':id/status')
-  @Roles('SUPER_ADMIN', 'SUPPORT')
-  updateStatus(@Param('id', ParseUUIDPipe) id: string, @Body() dto: UpdateOrgStatusDto) {
-    return this.updateOrgStatus.execute(id, dto.status)
   }
 
   @Delete(':id')
@@ -144,7 +146,7 @@ export class OrganizationsController {
     return this.clinicApi.updateClinicUser(clinicId, organizationUserId, dto)
   }
 
-  @Post(':id/users/:organizationUserId/reset-password')
+  @Post(':id/users/:organizationUserId/password-resets')
   @Roles('SUPER_ADMIN', 'SUPPORT')
   @UseGuards(AdminThrottlerGuard, IpThrottlerGuard)
   @Throttle({ default: { limit: 5, ttl: 600_000 }, 'reset-ip': { limit: 20, ttl: 3_600_000 } })

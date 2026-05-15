@@ -98,7 +98,7 @@ export function CreateOrganizationModal() {
         return { mode: 'linked' as const, data: res.data }
       }
 
-      const res = await api.post('/organizations/with-owner', {
+      const res = await api.post('/organizations', {
         organizationType: data.organizationType,
         name: data.name,
         ...(data.organizationType === 'CLINIC_PJ' && { document: data.document }),

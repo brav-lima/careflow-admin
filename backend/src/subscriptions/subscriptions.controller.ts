@@ -52,7 +52,7 @@ export class SubscriptionsController {
     return this.subscriptionsService.update(id, dto)
   }
 
-  @Patch(':id/cancel')
+  @Post(':id/cancellations')
   @Roles('SUPER_ADMIN', 'FINANCE')
   cancel(@Param('id', ParseUUIDPipe) id: string) {
     return this.subscriptionsService.cancel(id)

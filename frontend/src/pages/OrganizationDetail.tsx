@@ -81,7 +81,7 @@ export function OrganizationDetailPage() {
   const invoices = invoicesResp?.data
 
   const changeStatus = useMutation({
-    mutationFn: (status: OrgStatus) => api.patch(`/organizations/${id}/status`, { status }),
+    mutationFn: (status: OrgStatus) => api.patch(`/organizations/${id}`, { status }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['organization', id] })
       queryClient.invalidateQueries({ queryKey: ['organizations'] })
