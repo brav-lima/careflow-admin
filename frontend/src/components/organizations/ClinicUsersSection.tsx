@@ -61,7 +61,7 @@ export function ClinicUsersSection({ organizationId }: { organizationId: string 
   const resetPassword = useMutation({
     mutationFn: (user: ClinicUser) =>
       api
-        .post(`/organizations/${organizationId}/users/${user.organizationUserId}/reset-password`)
+        .post(`/organizations/${organizationId}/users/${user.organizationUserId}/password-resets`)
         .then((r) => ({ data: r.data as { provisionalPassword: string }, user })),
     onSuccess: ({ data, user }) => {
       setResetInfo({

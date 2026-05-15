@@ -1,4 +1,5 @@
 import { Controller, Get, Post, Patch, Body, Param, ParseUUIDPipe, Query, UseGuards } from '@nestjs/common'
+// Note: Patch is kept for the generic update; payments/cancellations use Post
 import { ApiBearerAuth, ApiTags, ApiQuery } from '@nestjs/swagger'
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard'
 import { RolesGuard } from '../auth/guards/roles.guard'
@@ -51,13 +52,13 @@ export class InvoicesController {
     return this.invoicesService.findOne(id)
   }
 
-  @Patch(':id/mark-paid')
+  @Post(':id/payments')
   @Roles('SUPER_ADMIN', 'FINANCE')
   markPaid(@Param('id', ParseUUIDPipe) id: string) {
     return this.invoicesService.markPaid(id)
   }
 
-  @Patch(':id/cancel')
+  @Post(':id/cancellations')
   @Roles('SUPER_ADMIN', 'FINANCE')
   cancel(@Param('id', ParseUUIDPipe) id: string) {
     return this.invoicesService.cancel(id)

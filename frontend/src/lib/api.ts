@@ -7,16 +7,14 @@ export const api = axios.create({
 
 type RetriableConfig = AxiosRequestConfig & { _retry?: boolean }
 
-const REFRESH_PATH = '/auth/refresh'
-const LOGIN_PATH = '/auth/login'
-const LOGOUT_PATH = '/auth/logout'
+const SESSIONS_PATH = '/auth/sessions'
 const ME_PATH = '/auth/me'
 
 let refreshInFlight: Promise<void> | null = null
 
 const refreshSession = async () => {
   if (!refreshInFlight) {
-    refreshInFlight = api.post(REFRESH_PATH).then(
+    refreshInFlight = api.put(SESSIONS_PATH).then(
       () => undefined,
       (err) => {
         throw err
@@ -29,8 +27,7 @@ const refreshSession = async () => {
   return refreshInFlight
 }
 
-const isAuthEndpoint = (url: string) =>
-  url.includes(REFRESH_PATH) || url.includes(LOGIN_PATH) || url.includes(LOGOUT_PATH)
+const isAuthEndpoint = (url: string) => url.includes(SESSIONS_PATH)
 
 api.interceptors.response.use(
   (response) => response,

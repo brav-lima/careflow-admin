@@ -1,5 +1,6 @@
-import { Injectable, Logger, ServiceUnavailableException } from '@nestjs/common'
+import { Injectable, Logger, OnModuleInit, ServiceUnavailableException } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
+import * as CircuitBreaker from 'opossum'
 
 export type ClinicAccessStatus = 'ACTIVE' | 'BLOCKED'
 
@@ -81,10 +82,41 @@ export interface UpdateClinicUserResponse {
 }
 
 @Injectable()
-export class ClinicApiService {
+export class ClinicApiService implements OnModuleInit {
   private readonly logger = new Logger(ClinicApiService.name)
+  private breaker: CircuitBreaker<[string, RequestInit], Response>
 
   constructor(private readonly config: ConfigService) {}
+
+  onModuleInit() {
+    this.breaker = new CircuitBreaker(
+      async (url: string, options: RequestInit): Promise<Response> => {
+        const controller = new AbortController()
+        const timeout = setTimeout(() => controller.abort(), 5000)
+        try {
+          return await fetch(url, { ...options, signal: controller.signal })
+        } finally {
+          clearTimeout(timeout)
+        }
+      },
+      {
+        timeout: 5500,
+        errorThresholdPercentage: 50,
+        resetTimeout: 30_000,
+        volumeThreshold: 5,
+      },
+    )
+
+    this.breaker.on('open', () =>
+      this.logger.warn('Circuit breaker OPEN — pelvi-ui indisponível'),
+    )
+    this.breaker.on('halfOpen', () =>
+      this.logger.log('Circuit breaker HALF-OPEN — testando pelvi-ui'),
+    )
+    this.breaker.on('close', () =>
+      this.logger.log('Circuit breaker CLOSED — pelvi-ui recuperado'),
+    )
+  }
 
   private get baseUrl(): string {
     return this.config.getOrThrow<string>('CLINIC_API_URL')
@@ -120,16 +152,11 @@ export class ClinicApiService {
     return url.toString()
   }
 
-  private async fetchWithTimeout(url: string, options: RequestInit, timeoutMs = 5000): Promise<Response> {
-    const controller = new AbortController()
-    const timeout = setTimeout(() => controller.abort(), timeoutMs)
+  private async fetchWithTimeout(url: string, options: RequestInit): Promise<Response> {
     try {
-      const res = await fetch(url, { ...options, signal: controller.signal })
-      return res
+      return await this.breaker.fire(url, options)
     } catch {
       throw new ServiceUnavailableException('pelvi API indisponível')
-    } finally {
-      clearTimeout(timeout)
     }
   }
 

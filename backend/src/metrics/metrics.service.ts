@@ -6,20 +6,21 @@ export class MetricsService {
   constructor(private readonly prisma: PrismaService) {}
 
   async getSummary() {
-    const [activeOrgs, trialOrgs, suspendedOrgs, overdueInvoices, mrrAgg] =
-      await this.prisma.$transaction([
+    const [activeOrgs, trialOrgs, suspendedOrgs, overdueInvoices, mrrResult] =
+      await Promise.all([
         this.prisma.organization.count({ where: { status: 'ACTIVE' } }),
         this.prisma.subscription.count({ where: { status: 'TRIAL' } }),
         this.prisma.organization.count({ where: { status: 'SUSPENDED' } }),
         this.prisma.invoice.count({ where: { status: 'OVERDUE' } }),
-        this.prisma.subscription.findMany({
-          where: { status: 'ACTIVE' },
-          select: { plan: { select: { priceMonthly: true } } },
-          take: 10000,
-        }),
+        this.prisma.$queryRaw<[{ mrr: string }]>`
+          SELECT COALESCE(SUM(p.price_monthly), 0)::text AS mrr
+          FROM subscriptions s
+          JOIN plans p ON p.id = s.plan_id
+          WHERE s.status = 'ACTIVE'
+        `,
       ])
 
-    const mrr = mrrAgg.reduce((sum, sub) => sum + Number(sub.plan.priceMonthly), 0)
+    const mrr = Number(mrrResult[0]?.mrr ?? 0)
 
     return { mrr, activeOrgs, trialOrgs, suspendedOrgs, overdueInvoices }
   }
@@ -103,45 +104,83 @@ export class MetricsService {
 
     const windowStart = slots[0].start
 
-    const [paidInvoices, orgsCreated, trialsCreated, overdueByDue] =
-      await this.prisma.$transaction([
-        this.prisma.invoice.findMany({
-          where: { status: 'PAID', paidAt: { gte: windowStart } },
-          select: { amount: true, paidAt: true },
-          take: 50000,
-        }),
-        this.prisma.organization.findMany({
-          where: { createdAt: { gte: windowStart } },
-          select: { createdAt: true },
-          take: 50000,
-        }),
-        this.prisma.subscription.findMany({
-          where: { startDate: { gte: windowStart } },
-          select: { startDate: true },
-          take: 50000,
-        }),
-        this.prisma.invoice.findMany({
-          where: { status: 'OVERDUE', dueDate: { gte: windowStart } },
-          select: { dueDate: true },
-          take: 50000,
-        }),
-      ])
+    const [revenueRows, newOrgsRows, newTrialsRows, overdueRows] = await Promise.all([
+      this.prisma.$queryRaw<Array<{ year: number; month: number; revenue: string }>>`
+        SELECT
+          EXTRACT(YEAR FROM paid_at)::int  AS year,
+          EXTRACT(MONTH FROM paid_at)::int AS month,
+          SUM(amount)::text                AS revenue
+        FROM invoices
+        WHERE status = 'PAID' AND paid_at >= ${windowStart}
+        GROUP BY year, month
+        ORDER BY year, month
+      `,
+      this.prisma.$queryRaw<Array<{ year: number; month: number; count: string }>>`
+        SELECT
+          EXTRACT(YEAR FROM created_at)::int  AS year,
+          EXTRACT(MONTH FROM created_at)::int AS month,
+          COUNT(*)::text                      AS count
+        FROM organizations
+        WHERE created_at >= ${windowStart}
+        GROUP BY year, month
+        ORDER BY year, month
+      `,
+      this.prisma.$queryRaw<Array<{ year: number; month: number; count: string }>>`
+        SELECT
+          EXTRACT(YEAR FROM start_date)::int  AS year,
+          EXTRACT(MONTH FROM start_date)::int AS month,
+          COUNT(*)::text                      AS count
+        FROM subscriptions
+        WHERE start_date >= ${windowStart}
+        GROUP BY year, month
+        ORDER BY year, month
+      `,
+      this.prisma.$queryRaw<Array<{ year: number; month: number; count: string }>>`
+        SELECT
+          EXTRACT(YEAR FROM due_date)::int  AS year,
+          EXTRACT(MONTH FROM due_date)::int AS month,
+          COUNT(*)::text                    AS count
+        FROM invoices
+        WHERE status = 'OVERDUE' AND due_date >= ${windowStart}
+        GROUP BY year, month
+        ORDER BY year, month
+      `,
+    ])
 
-    const inSlot = (date: Date, slot: { start: Date; end: Date }) =>
-      date >= slot.start && date <= slot.end
+    const slotOf = (year: number, month: number) =>
+      slots.findIndex(
+        (s) => s.start.getFullYear() === year && s.start.getMonth() + 1 === month,
+      )
 
-    const mrr = slots.map((s) =>
-      paidInvoices.filter((i) => i.paidAt && inSlot(i.paidAt, s)).reduce((acc, i) => acc + Number(i.amount), 0),
-    )
-    const activeOrgs = slots.map((s) =>
-      orgsCreated.filter((o) => o.createdAt <= s.end).length,
-    )
-    const trialOrgs = slots.map((s) =>
-      trialsCreated.filter((sub) => inSlot(sub.startDate, s)).length,
-    )
-    const overdueInvoices = slots.map((s) =>
-      overdueByDue.filter((i) => inSlot(i.dueDate, s)).length,
-    )
+    const mrr = Array<number>(months).fill(0)
+    for (const row of revenueRows) {
+      const i = slotOf(row.year, row.month)
+      if (i >= 0) mrr[i] = Number(row.revenue)
+    }
+
+    const trialOrgs = Array<number>(months).fill(0)
+    for (const row of newTrialsRows) {
+      const i = slotOf(row.year, row.month)
+      if (i >= 0) trialOrgs[i] = Number(row.count)
+    }
+
+    const overdueInvoices = Array<number>(months).fill(0)
+    for (const row of overdueRows) {
+      const i = slotOf(row.year, row.month)
+      if (i >= 0) overdueInvoices[i] = Number(row.count)
+    }
+
+    // cumulative count of new orgs in window up to each slot's end (mirrors original behavior)
+    const activeOrgs = Array<number>(months).fill(0)
+    let cumOrgs = 0
+    for (let i = 0; i < months; i++) {
+      const s = slots[i]
+      const row = newOrgsRows.find(
+        (r) => r.year === s.start.getFullYear() && r.month === s.start.getMonth() + 1,
+      )
+      cumOrgs += row ? Number(row.count) : 0
+      activeOrgs[i] = cumOrgs
+    }
 
     const last = months - 1
     const prev = months - 2

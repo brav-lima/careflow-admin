@@ -1,4 +1,4 @@
-import { Controller, Post, Get, Patch, Body, UseGuards, Res, Req } from '@nestjs/common'
+import { Controller, Post, Put, Delete, Get, Patch, Body, UseGuards, Res, Req } from '@nestjs/common'
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger'
 import { Throttle, ThrottlerGuard } from '@nestjs/throttler'
 import { Request, Response, CookieOptions } from 'express'
@@ -41,7 +41,7 @@ export class AuthController {
   @Public()
   @UseGuards(ThrottlerGuard)
   @Throttle({ default: { limit: 5, ttl: 60000 } })
-  @Post('login')
+  @Post('sessions')
   async login(@Body() dto: LoginDto, @Res({ passthrough: true }) res: Response) {
     const { accessToken, refreshToken, refreshTokenMaxAgeMs, user } =
       await this.authService.login(dto)
@@ -52,7 +52,7 @@ export class AuthController {
 
   @Public()
   @UseGuards(JwtRefreshGuard)
-  @Post('refresh')
+  @Put('sessions')
   async refresh(
     @CurrentRefreshUser() refreshUser: RefreshUser,
     @Res({ passthrough: true }) res: Response,
@@ -65,7 +65,7 @@ export class AuthController {
   }
 
   @Public()
-  @Post('logout')
+  @Delete('sessions')
   async logout(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
     const refreshToken = req.cookies?.[REFRESH_COOKIE_NAME] as string | undefined
     if (refreshToken) {

@@ -68,7 +68,7 @@ export function InvoicesPage() {
   const total = invoicesResp?.total ?? 0
 
   const markPaid = useMutation({
-    mutationFn: (id: string) => api.patch(`/invoices/${id}/mark-paid`),
+    mutationFn: (id: string) => api.post(`/invoices/${id}/payments`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['invoices'] })
       toast.success('Fatura marcada como paga')
