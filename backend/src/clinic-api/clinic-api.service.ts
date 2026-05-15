@@ -1,6 +1,6 @@
 import { Injectable, Logger, OnModuleInit, ServiceUnavailableException } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
-import CircuitBreaker from 'opossum'
+import * as CircuitBreaker from 'opossum'
 
 export type ClinicAccessStatus = 'ACTIVE' | 'BLOCKED'
 
