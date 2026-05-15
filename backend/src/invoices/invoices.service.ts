@@ -1,5 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common'
 import { PrismaService } from '../prisma/prisma.service'
+import { Prisma } from '@prisma/client'
 import { CreateInvoiceDto } from './dto/create-invoice.dto'
 
 @Injectable()
@@ -16,9 +17,9 @@ export class InvoicesService {
   ) {
     const take = Math.min(limit, 100)
     const skip = (page - 1) * take
-    const where: any = {
+    const where: Prisma.InvoiceWhereInput = {
       ...(subscriptionId && { subscriptionId }),
-      ...(status && { status }),
+      ...(status && { status: status as Prisma.EnumInvoiceStatusFilter }),
     }
 
     if (month && year) {

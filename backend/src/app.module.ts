@@ -1,6 +1,7 @@
 import { Module, MiddlewareConsumer, NestModule } from '@nestjs/common'
 import { ConfigModule } from '@nestjs/config'
 import { ThrottlerModule } from '@nestjs/throttler'
+import { LoggerModule } from 'nestjs-pino'
 import { PrismaModule } from './prisma/prisma.module'
 import { AuthModule } from './auth/auth.module'
 import { OrganizationsModule } from './organizations/organizations.module'
@@ -9,7 +10,7 @@ import { SubscriptionsModule } from './subscriptions/subscriptions.module'
 import { InvoicesModule } from './invoices/invoices.module'
 import { MetricsModule } from './metrics/metrics.module'
 import { ClinicApiModule } from './clinic-api/clinic-api.module'
-import { VersionModule } from './version/version.module'
+import { HealthModule } from './health/health.module'
 import { ClinicExtModule } from './clinic-ext/clinic-ext.module'
 import { CorrelationIdMiddleware } from './common/correlation/correlation-id.middleware'
 
@@ -24,6 +25,22 @@ import { CorrelationIdMiddleware } from './common/correlation/correlation-id.mid
       { ttl: 60000, limit: 100 },
       { name: 'reset-ip', ttl: 3_600_000, limit: 1000 },
     ]),
+    LoggerModule.forRoot({
+      pinoHttp: {
+        level: process.env.NODE_ENV === 'production' ? 'info' : 'debug',
+        transport:
+          process.env.NODE_ENV !== 'production'
+            ? { target: 'pino-pretty', options: { colorize: true } }
+            : undefined,
+        serializers: {
+          req: (req) => ({ method: req.method, url: req.url }),
+          res: (res) => ({ statusCode: res.statusCode }),
+        },
+        customProps: (req) => ({
+          correlationId: req.headers['x-correlation-id'],
+        }),
+      },
+    }),
     PrismaModule,
     ClinicApiModule,
     AuthModule,
@@ -32,7 +49,7 @@ import { CorrelationIdMiddleware } from './common/correlation/correlation-id.mid
     SubscriptionsModule,
     InvoicesModule,
     MetricsModule,
-    VersionModule,
+    HealthModule,
     ClinicExtModule,
   ],
 })

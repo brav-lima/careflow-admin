@@ -11,18 +11,19 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     const response = ctx.getResponse<Response>()
 
     let status = 500
-    let message = 'Internal server error'
+    let body: Record<string, unknown> = { message: 'Internal server error' }
 
     if (exception instanceof HttpException) {
       status = exception.getStatus()
-      message = exception.message
+      const res = exception.getResponse()
+      body = typeof res === 'string' ? { message: res } : (res as Record<string, unknown>)
     } else {
       this.logger.error(exception instanceof Error ? exception.stack : String(exception))
     }
 
     response.status(status).json({
+      ...body,
       statusCode: status,
-      message,
       correlationId: getCorrelationId(),
       timestamp: new Date().toISOString(),
     })

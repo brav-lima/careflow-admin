@@ -4,7 +4,7 @@ import { PrismaService } from '../prisma/prisma.service'
 
 @ApiTags('health')
 @Controller('health')
-export class VersionController {
+export class HealthController {
   constructor(private readonly prisma: PrismaService) {}
 
   @Get()

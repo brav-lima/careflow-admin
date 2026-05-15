@@ -3,15 +3,15 @@ import { ValidationPipe, BadRequestException } from '@nestjs/common'
 import { DecimalSerializerInterceptor } from './common/interceptors/decimal-serializer.interceptor'
 import { ConfigService } from '@nestjs/config'
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger'
+import { Logger } from 'nestjs-pino'
 import * as cookieParser from 'cookie-parser'
 import helmet from 'helmet'
 import { AppModule } from './app.module'
 import { GlobalExceptionFilter } from './common/filters/global-exception.filter'
-import { AppLogger } from './common/logger/app-logger.service'
 
 async function bootstrap() {
-  const appLogger = new AppLogger()
-  const app = await NestFactory.create(AppModule, { logger: appLogger })
+  const app = await NestFactory.create(AppModule, { bufferLogs: true })
+  app.useLogger(app.get(Logger))
 
   const config = app.get(ConfigService)
   const port = config.get<number>('PORT', 3001)
