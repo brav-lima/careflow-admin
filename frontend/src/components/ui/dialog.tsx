@@ -22,14 +22,15 @@ export function DialogContent({
       <DialogPrimitive.Content
         className={cn(
           'fixed left-1/2 top-1/2 z-50 w-full max-w-lg -translate-x-1/2 -translate-y-1/2',
-          'bg-card rounded-lg border shadow-xl p-6',
+          'bg-card rounded-lg border shadow-xl',
+          'flex flex-col max-h-[90vh]',
           'data-[state=open]:animate-in data-[state=open]:fade-in data-[state=open]:zoom-in-95',
           'data-[state=closed]:animate-out data-[state=closed]:fade-out data-[state=closed]:zoom-out-95',
           className,
         )}
         {...props}
       >
-        <div className="flex items-start justify-between mb-4">
+        <div className="flex items-start justify-between px-6 pt-6 pb-4 shrink-0">
           <div>
             <DialogPrimitive.Title className="text-base font-semibold">{title}</DialogPrimitive.Title>
             {description && (
@@ -42,7 +43,9 @@ export function DialogContent({
             <X className="h-4 w-4" />
           </DialogPrimitive.Close>
         </div>
-        {children}
+        <div className="overflow-y-auto px-6 pb-6">
+          {children}
+        </div>
       </DialogPrimitive.Content>
     </DialogPrimitive.Portal>
   )
