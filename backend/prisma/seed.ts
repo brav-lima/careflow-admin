@@ -1,7 +1,6 @@
 import { PrismaClient } from '@prisma/client'
 import { PrismaPg } from '@prisma/adapter-pg'
 import * as bcrypt from 'bcrypt'
-import { randomBytes } from 'crypto'
 
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_ADMIN_URL! })
 const prisma = new PrismaClient({ adapter })
@@ -53,30 +52,23 @@ async function main() {
 
   // Super admin inicial
   const adminEmail = process.env.SEED_ADMIN_EMAIL ?? 'admin@soupelvi.com.br'
-  const DEFAULT_PASSWORD = 'changeme123'
-  const rawPassword = process.env.SEED_ADMIN_PASSWORD ?? DEFAULT_PASSWORD
-  const isDefault = rawPassword === DEFAULT_PASSWORD
+  const adminPassword = process.env.SEED_ADMIN_PASSWORD
 
-  const adminPassword = isDefault ? randomBytes(16).toString('hex') : rawPassword
+  if (!adminPassword) {
+    throw new Error('SEED_ADMIN_PASSWORD env var is required')
+  }
+
   const passwordHash = await bcrypt.hash(adminPassword, 12)
 
-  await prisma.adminUser.upsert({
-    where: { email: adminEmail },
-    update: {},
-    create: {
-      name: 'Super Admin',
-      email: adminEmail,
-      passwordHash,
-      role: 'SUPER_ADMIN',
-    },
-  })
+  const existing = await prisma.adminUser.findUnique({ where: { email: adminEmail }, select: { id: true } })
 
-  console.log(`✅ Admin criado: ${adminEmail}`)
-  if (isDefault) {
-    console.log('🔑 Uma senha aleatória foi gerada automaticamente para o admin.')
-    console.log('⚠️  Defina/rotacione a senha por um canal seguro antes de uso em produção.')
+  if (existing) {
+    console.log(`✅ Admin já existe: ${adminEmail} (senha não alterada)`)
   } else {
-    console.log('⚠️  Troque a senha do admin após o primeiro login!')
+    await prisma.adminUser.create({
+      data: { name: 'Super Admin', email: adminEmail, passwordHash, role: 'SUPER_ADMIN' },
+    })
+    console.log(`✅ Admin criado: ${adminEmail}`)
   }
 }
 
