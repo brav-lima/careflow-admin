@@ -51,7 +51,7 @@ export function LoginPage() {
       {/* Left brand panel */}
       <div
         style={{
-          background: 'linear-gradient(160deg, hsl(16 65% 34%) 0%, hsl(20 22% 12%) 100%)',
+          background: 'linear-gradient(160deg, hsl(296 28% 32%) 0%, hsl(290 15% 10%) 100%)',
           color: 'white',
           padding: 40,
           display: 'flex',

@@ -18,18 +18,18 @@ All development MUST follow this process — no exceptions:
 - Create a dedicated branch for each issue before writing any code
 - Branch naming convention: `<type>/<issue-number>-<short-slug>`
   - Examples: `fix/1-rate-limiting`, `feat/9-refresh-token`, `chore/14-db-indexes`
-- Always branch off `main`:
+- Always branch off `staging`:
   ```bash
-  git checkout main && git pull && git checkout -b fix/1-rate-limiting
+  git checkout staging && git pull && git checkout -b fix/1-rate-limiting
   ```
 
 ### 3. Pull Request linked to the issue
-- Open a PR targeting `main` with the issue number in the body using `Closes #<n>`
+- Open a PR targeting `staging` with the issue number in the body using `Closes #<n>`
 - PR title should match the issue title (without the emoji prefix)
 - PR must pass TypeScript check (`tsc --noEmit`) before being considered ready
-- Use `gh pr create` and include the issue reference:
+- Use `gh pr create --base staging` and include the issue reference:
   ```bash
-  gh pr create --title "..." --body "Closes #<n>"
+  gh pr create --base staging --title "..." --body "Closes #<n>"
   ```
 
 ### 4. Update the board after merge
@@ -105,10 +105,25 @@ Copy `backend/.env.example` to `backend/.env.dev` and populate:
 | `CLINIC_API_URL` | Base URL of the pelvi-ui clinic API (e.g. `http://localhost:3000`). Admin appends `/api/internal/*` — do **not** include the path prefix. |
 | `CLINIC_INTERNAL_API_KEY` | Shared secret for admin→clinic calls (`x-internal-api-key` header). Must match `INTERNAL_API_KEY` on the clinic side. Rotation policy: every 90 days or immediately on suspected compromise. |
 | `CLINIC_EXTERNAL_API_KEY` | Shared secret for clinic→admin calls accepted on `x-clinic-api-key` header. Must match `ADMIN_EXTERNAL_API_KEY` in pelvi-ui. Same rotation policy. |
+| `SEED_ADMIN_EMAIL` | Email do super admin criado no seed (default: `admin@soupelvi.com.br`) |
+| `SEED_ADMIN_PASSWORD` | **Obrigatória.** Senha do super admin criado no seed. Sem essa var o seed falha. Deve estar definida tanto em `.env.dev` (local) quanto nas envs do Railway (staging/production). Se o admin já existir no banco, o seed pula a criação e mantém a senha atual. |
 
 ### Docker
 
 Both frontend and backend have a `Dockerfile`. The backend uses `docker-entrypoint.sh`, which runs `prisma migrate deploy` + seed on startup (idempotent; set `RUN_SEED=false` to skip seeding). Both containers install via Bun. End-to-end orchestration with the clinic product lives in the parent `docker-compose.yml`.
+
+### Environments (Railway)
+
+Railway and Git branches are aligned 1:1:
+
+| Git branch | Railway environment | Purpose |
+|------------|---------------------|---------|
+| `staging`  | `staging` (`stg`)   | Homologation — all PRs land here first |
+| `main`     | `production`        | Live traffic — promoted from `staging` after validation |
+
+Database and infra (Railway services, env vars) follow the same split: each environment has its own isolated DB and configuration. Never point a staging service at the production database or vice versa.
+
+pelvi-ui mirrors this layout with identical `staging` and `production` environments on Railway so both services can be tested together end-to-end before promotion.
 
 ---
 
