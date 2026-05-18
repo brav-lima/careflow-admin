@@ -1,0 +1,48 @@
+services:
+  api:
+    build:
+      context: ./backend
+      args:
+        APP_VERSION: ${APP_VERSION:-dev}
+        GIT_SHA: ${GIT_SHA:-unknown}
+        BUILT_AT: ${BUILT_AT:-unknown}
+    container_name: pelvi-admin-api
+    restart: unless-stopped
+    environment:
+      DATABASE_ADMIN_URL: ${DATABASE_ADMIN_URL}
+      DIRECT_DATABASE_ADMIN_URL: ${DIRECT_DATABASE_ADMIN_URL}
+      JWT_ADMIN_SECRET: ${JWT_ADMIN_SECRET}
+      JWT_ADMIN_REFRESH_SECRET: ${JWT_ADMIN_REFRESH_SECRET}
+      PORT: 3001
+      CORS_ORIGIN: ${CORS_ORIGIN}
+      NODE_ENV: production
+      CLINIC_API_URL: ${CLINIC_API_URL}
+      CLINIC_INTERNAL_API_KEY: ${CLINIC_INTERNAL_API_KEY}
+      CLINIC_EXTERNAL_API_KEY: ${CLINIC_EXTERNAL_API_KEY}
+      SEED_ADMIN_EMAIL: ${SEED_ADMIN_EMAIL:-admin@soupelvi.com.br}
+      SEED_ADMIN_PASSWORD: ${SEED_ADMIN_PASSWORD}
+      RUN_SEED: ${RUN_SEED:-true}
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3001/api/admin/health', r => process.exit(r.statusCode !== 200)).on('error', () => process.exit(1))"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    ports:
+      - "127.0.0.1:3001:3001"
+
+  web:
+    build:
+      context: ./frontend
+      args:
+        APP_VERSION: ${APP_VERSION:-dev}
+        GIT_SHA: ${GIT_SHA:-unknown}
+        BUILT_AT: ${BUILT_AT:-unknown}
+    container_name: pelvi-admin-web
+    restart: unless-stopped
+    depends_on:
+      - api
+    environment:
+      BACKEND_URL: ${BACKEND_URL:-http://api:3001}
+    ports:
+      - "127.0.0.1:8081:80"

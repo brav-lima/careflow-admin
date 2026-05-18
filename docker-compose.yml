@@ -37,8 +37,10 @@ services:
       NODE_ENV: ${NODE_ENV:-development}
       CLINIC_API_URL: ${CLINIC_API_URL:-http://localhost:3000}
       CLINIC_INTERNAL_API_KEY: ${CLINIC_INTERNAL_API_KEY:-shared-internal-api-key-change-me-min-32-chars}
+      CLINIC_EXTERNAL_API_KEY: ${CLINIC_EXTERNAL_API_KEY:-shared-external-api-key-change-me-min-32-chars}
       SEED_ADMIN_EMAIL: ${SEED_ADMIN_EMAIL:-admin@soupelvi.com.br}
-      SEED_ADMIN_PASSWORD: ${SEED_ADMIN_PASSWORD:-changeme123}
+      SEED_ADMIN_PASSWORD: ${SEED_ADMIN_PASSWORD:-changeme-dev-only}
+      RUN_SEED: ${RUN_SEED:-true}
     ports:
       - "3001:3001"
 
@@ -52,6 +54,8 @@ services:
     container_name: pelvi-admin-web
     depends_on:
       - api
+    environment:
+      BACKEND_URL: ${BACKEND_URL:-http://api:3001}
     ports:
       - "8081:80"
 
