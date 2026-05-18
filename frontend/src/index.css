@@ -5,55 +5,56 @@
 @layer base {
   :root {
     /* ── Tailwind shadcn tokens (kept for compatibility) ── */
-    --background: 30 18% 98%;
-    --foreground: 220 20% 10%;
-    --card: 30 10% 100%;
-    --card-foreground: 220 20% 10%;
-    --popover: 30 10% 100%;
-    --popover-foreground: 220 20% 10%;
-    --primary: 16 65% 44%;
+    /* Pelvi — ameixa (plum) · base #653B69 · hsl(296 28% 32%) */
+    --background: 290 6% 98%;
+    --foreground: 290 18% 10%;
+    --card: 290 4% 100%;
+    --card-foreground: 290 18% 10%;
+    --popover: 290 4% 100%;
+    --popover-foreground: 290 18% 10%;
+    --primary: 296 28% 32%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 30 15% 96%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-    --muted: 30 12% 94%;
-    --muted-foreground: 220 10% 45%;
-    --accent: 16 55% 93%;
-    --accent-foreground: 16 65% 28%;
+    --secondary: 290 8% 96%;
+    --secondary-foreground: 290 18% 12%;
+    --muted: 290 6% 95%;
+    --muted-foreground: 290 8% 45%;
+    --accent: 296 25% 92%;
+    --accent-foreground: 296 28% 26%;
     --destructive: 0 72% 51%;
     --destructive-foreground: 210 40% 98%;
-    --border: 20 15% 90%;
-    --input: 20 15% 90%;
-    --ring: 16 65% 44%;
+    --border: 290 6% 88%;
+    --input: 290 6% 88%;
+    --ring: 296 28% 32%;
     --radius: 0.5rem;
-    --sidebar-background: 20 15% 9%;
-    --sidebar-foreground: 30 18% 96%;
-    --sidebar-primary: 16 60% 52%;
+    --sidebar-background: 290 15% 9%;
+    --sidebar-foreground: 280 12% 96%;
+    --sidebar-primary: 296 30% 52%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 16 45% 18%;
-    --sidebar-accent-foreground: 16 60% 80%;
-    --sidebar-border: 20 12% 18%;
-    --sidebar-ring: 16 60% 52%;
+    --sidebar-accent: 296 22% 18%;
+    --sidebar-accent-foreground: 296 35% 80%;
+    --sidebar-border: 290 12% 18%;
+    --sidebar-ring: 296 30% 52%;
 
     /* ── Pelvi Design System tokens ── */
-    --bg:           hsl(30 18% 98%);
-    --surface:      hsl(30 10% 100%);
-    --surface-2:    hsl(30 15% 96%);
-    --surface-3:    hsl(20 14% 93%);
-    --ds-border:    hsl(20 15% 90%);
-    --border-soft:  hsl(20 14% 93%);
-    --divider:      hsl(20 14% 93%);
+    --bg:           hsl(290 6% 98%);
+    --surface:      hsl(290 4% 100%);
+    --surface-2:    hsl(290 8% 96%);
+    --surface-3:    hsl(290 6% 93%);
+    --ds-border:    hsl(290 6% 88%);
+    --border-soft:  hsl(290 6% 92%);
+    --divider:      hsl(290 6% 92%);
 
-    --text:         hsl(220 20% 10%);
-    --text-2:       hsl(220 14% 28%);
-    --text-muted:   hsl(220 10% 45%);
-    --text-faint:   hsl(220 8% 62%);
+    --text:         hsl(290 18% 10%);
+    --text-2:       hsl(290 14% 28%);
+    --text-muted:   hsl(290 8% 45%);
+    --text-faint:   hsl(290 6% 62%);
 
-    --p:            hsl(16 65% 44%);
-    --p-hover:      hsl(16 65% 34%);
-    --p-soft:       hsl(16 55% 93%);
-    --p-soft-2:     hsl(16 60% 96%);
-    --p-border:     hsl(16 50% 82%);
-    --p-ink:        hsl(16 65% 28%);
+    --p:            hsl(296 28% 32%);
+    --p-hover:      hsl(296 28% 24%);
+    --p-soft:       hsl(296 30% 94%);
+    --p-soft-2:     hsl(296 30% 97%);
+    --p-border:     hsl(296 25% 80%);
+    --p-ink:        hsl(296 28% 26%);
 
     --ok:           hsl(142 72% 40%);
     --ok-soft:      hsl(142 55% 93%);
@@ -71,26 +72,26 @@
     --info-soft:    hsl(199 85% 94%);
     --info-ink:     hsl(199 70% 28%);
 
-    --violet:       hsl(285 60% 60%);
-    --violet-soft:  hsl(285 65% 95%);
-    --violet-ink:   hsl(285 50% 32%);
+    --violet:       hsl(265 60% 60%);
+    --violet-soft:  hsl(265 65% 95%);
+    --violet-ink:   hsl(265 50% 32%);
 
-    --side-bg:      hsl(20 15% 9%);
-    --side-bg-2:    hsl(20 12% 14%);
-    --side-border:  hsl(20 12% 18%);
-    --side-text:    hsl(30 18% 96%);
-    --side-text-2:  hsl(30 6% 64%);
-    --side-active-bg: hsl(16 45% 18%);
-    --side-active-text: hsl(16 60% 80%);
+    --side-bg:      hsl(290 15% 9%);
+    --side-bg-2:    hsl(290 14% 14%);
+    --side-border:  hsl(290 12% 18%);
+    --side-text:    hsl(280 12% 96%);
+    --side-text-2:  hsl(280 6% 64%);
+    --side-active-bg: hsl(296 22% 18%);
+    --side-active-text: hsl(296 35% 80%);
 
     --font-sans:    "Inter", ui-sans-serif, system-ui, sans-serif;
     --font-display: "Plus Jakarta Sans", "Inter", ui-sans-serif, system-ui, sans-serif;
     --font-mono:    "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
 
-    --shadow-xs:    0 1px 0 hsl(220 20% 10% / 0.04);
-    --shadow-sm:    0 1px 2px hsl(220 20% 10% / 0.06), 0 1px 0 hsl(220 20% 10% / 0.03);
-    --shadow-md:    0 4px 16px -8px hsl(220 20% 10% / 0.10), 0 1px 2px hsl(220 20% 10% / 0.05);
-    --shadow-brand: 0 10px 30px -12px hsl(16 65% 44% / 0.18);
+    --shadow-xs:    0 1px 0 hsl(290 18% 10% / 0.04);
+    --shadow-sm:    0 1px 2px hsl(290 18% 10% / 0.06), 0 1px 0 hsl(290 18% 10% / 0.03);
+    --shadow-md:    0 4px 16px -8px hsl(290 18% 10% / 0.10), 0 1px 2px hsl(290 18% 10% / 0.05);
+    --shadow-brand: 0 10px 30px -12px hsl(296 28% 32% / 0.18);
   }
 }
 
@@ -185,7 +186,7 @@
   vertical-align: middle;
 }
 .pa-tbl tr:last-child td { border-bottom: 0; }
-.pa-tbl tbody tr:hover td { background: hsl(30 14% 95% / 0.7); }
+.pa-tbl tbody tr:hover td { background: hsl(290 6% 95% / 0.7); }
 .pa-tbl tr.is-selected td { background: var(--p-soft-2); }
 
 /* ── Timeline ── */
