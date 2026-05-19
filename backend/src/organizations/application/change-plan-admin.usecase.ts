@@ -34,7 +34,7 @@ export class ChangePlanAdminUseCase {
 
     await this.prisma.subscription.update({
       where: { id: current.id },
-      data: { planId, status: 'ACTIVE', trialEndsAt: null, startDate: new Date(), endDate: null },
+      data: { planId, status: 'ACTIVE', trialEndsAt: null, endDate: null },
     })
 
     if (org.clinicExternalId) {
