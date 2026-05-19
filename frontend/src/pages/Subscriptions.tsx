@@ -4,6 +4,7 @@ import { formatDate, formatCurrency } from '@/lib/utils'
 import type { Subscription, SubscriptionStatus } from '@/types/admin'
 import { Skeleton } from '@/components/ui/skeleton'
 import { CreateSubscriptionModal } from '@/components/subscriptions/CreateSubscriptionModal'
+import { ChangePlanModal } from '@/components/subscriptions/ChangePlanModal'
 import { OrgAvatar, StatusPill, PlanBadge, PageHeader, Card, SearchInput, FilterChip, TableFooter } from '@/components/ui/ds'
 import { useState } from 'react'
 
@@ -30,6 +31,7 @@ function SubStatusPill({ status }: { status: SubscriptionStatus }) {
 export function SubscriptionsPage() {
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all')
+  const [changingPlan, setChangingPlan] = useState<Subscription | null>(null)
 
   const { data: subscriptionsResp, isLoading, error } = useQuery<{ data: Subscription[]; total: number }>({
     queryKey: ['subscriptions'],
@@ -99,6 +101,14 @@ export function SubscriptionsPage() {
         <SearchInput value={search} onChange={setSearch} placeholder="Buscar por organização ou plano…" />
       </div>
 
+      {changingPlan && (
+        <ChangePlanModal
+          subscription={changingPlan}
+          open={!!changingPlan}
+          onClose={() => setChangingPlan(null)}
+        />
+      )}
+
       <Card style={{ display: 'flex', flexDirection: 'column' }}>
         <div style={{ flex: 1, overflow: 'auto' }}>
           <table className="pa-tbl">
@@ -146,9 +156,15 @@ export function SubscriptionsPage() {
                     {sub.trialEndsAt ? formatDate(sub.trialEndsAt) : '—'}
                   </td>
                   <td>
-                    <button style={{ width: 26, height: 26, display: 'grid', placeItems: 'center', border: 0, background: 'transparent', cursor: 'pointer', borderRadius: 6, color: 'var(--text-muted)' }}>
-                      <MoreIcon />
-                    </button>
+                    {(sub.status === 'ACTIVE' || sub.status === 'TRIAL') && (
+                      <button
+                        onClick={() => setChangingPlan(sub)}
+                        style={{ width: 26, height: 26, display: 'grid', placeItems: 'center', border: 0, background: 'transparent', cursor: 'pointer', borderRadius: 6, color: 'var(--text-muted)' }}
+                        title="Alterar plano"
+                      >
+                        <MoreIcon />
+                      </button>
+                    )}
                   </td>
                 </tr>
               ))}
