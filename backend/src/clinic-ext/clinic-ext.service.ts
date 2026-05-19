@@ -90,7 +90,6 @@ export class ClinicExtService {
         planId,
         status: 'ACTIVE',
         trialEndsAt: null,
-        startDate: new Date(),
         endDate: null,
       },
     })
