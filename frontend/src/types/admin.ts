@@ -33,6 +33,7 @@ export interface Plan {
   maxPatients: number
   features: Record<string, boolean> | null
   isActive: boolean
+  visibleToClinic: boolean
   createdAt: string
 }
 

@@ -34,4 +34,9 @@ export class CreatePlanDto {
   @IsOptional()
   @IsBoolean()
   isActive?: boolean
+
+  @ApiPropertyOptional({ default: true, description: 'Se false, o plano não aparece na interface da clínica (somente via admin)' })
+  @IsOptional()
+  @IsBoolean()
+  visibleToClinic?: boolean
 }

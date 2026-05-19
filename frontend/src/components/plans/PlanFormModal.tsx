@@ -26,6 +26,7 @@ const schema = z.object({
   maxUsers: z.coerce.number().int().min(1, 'Mínimo 1 usuário'),
   maxPatients: z.coerce.number().int().min(1, 'Mínimo 1 paciente'),
   isActive: z.boolean(),
+  visibleToClinic: z.boolean(),
 })
 
 type FormData = z.infer<typeof schema>
@@ -49,8 +50,8 @@ export function PlanFormModal({ plan }: Props) {
   } = useForm<FormData>({
     resolver: zodResolver(schema),
     defaultValues: plan
-      ? { name: plan.name, priceMonthly: plan.priceMonthly, maxUsers: plan.maxUsers, maxPatients: plan.maxPatients, isActive: plan.isActive }
-      : { isActive: true },
+      ? { name: plan.name, priceMonthly: plan.priceMonthly, maxUsers: plan.maxUsers, maxPatients: plan.maxPatients, isActive: plan.isActive, visibleToClinic: plan.visibleToClinic }
+      : { isActive: true, visibleToClinic: true },
   })
 
   useEffect(() => {
@@ -134,10 +135,17 @@ export function PlanFormModal({ plan }: Props) {
             </div>
           </div>
 
-          <label className="flex items-center gap-2 text-sm cursor-pointer">
-            <input type="checkbox" {...register('isActive')} className="rounded border-input" />
-            Plano ativo
-          </label>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <label className="flex items-center gap-2 text-sm cursor-pointer">
+              <input type="checkbox" {...register('isActive')} className="rounded border-input" />
+              Plano ativo
+            </label>
+            <label className="flex items-center gap-2 text-sm cursor-pointer">
+              <input type="checkbox" {...register('visibleToClinic')} className="rounded border-input" />
+              <span>Visível na interface da clínica</span>
+              <span style={{ fontSize: 11.5, color: 'var(--text-muted)', marginLeft: 2 }}>(desmarcar = somente via admin)</span>
+            </label>
+          </div>
 
           <div className="flex justify-end gap-2 pt-2">
             <Button type="button" variant="outline" onClick={() => setOpen(false)}>

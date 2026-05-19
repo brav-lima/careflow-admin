@@ -50,7 +50,7 @@ export class ClinicExtService {
 
   getPlans() {
     return this.prisma.plan.findMany({
-      where: { isActive: true },
+      where: { isActive: true, visibleToClinic: true },
       orderBy: { priceMonthly: 'asc' },
       select: {
         id: true,

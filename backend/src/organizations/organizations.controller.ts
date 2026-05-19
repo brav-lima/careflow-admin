@@ -1,6 +1,7 @@
 import {
   Controller, Get, Post, Patch, Delete,
   Body, Param, ParseUUIDPipe, Query, UseGuards, NotFoundException,
+  HttpCode, HttpStatus,
 } from '@nestjs/common'
 import { ApiBearerAuth, ApiTags, ApiQuery } from '@nestjs/swagger'
 import { Throttle } from '@nestjs/throttler'
@@ -14,6 +15,7 @@ import { CreateOrganizationWithOwnerUseCase } from './application/create-organiz
 import { UpdateOrgStatusUseCase } from './application/update-status.usecase'
 import { ListOrganizationsUseCase } from './application/list-organizations.usecase'
 import { ResetClinicUserPasswordUseCase } from './application/reset-clinic-user-password.usecase'
+import { ChangePlanAdminUseCase } from './application/change-plan-admin.usecase'
 import { ResolveClinicId } from './application/resolve-clinic-id'
 import { OrgEventService } from './application/org-event.service'
 import { CreateOrganizationDto } from './dto/create-organization.dto'
@@ -21,6 +23,7 @@ import { CreateOrganizationInputDto } from './dto/create-organization-input.dto'
 import { OrganizationType } from './dto/create-organization-with-owner.dto'
 import { UpdateOrganizationDto } from './dto/update-organization.dto'
 import { UpdateClinicUserDto } from './dto/update-clinic-user.dto'
+import { ChangeOrgPlanDto } from './dto/change-org-plan.dto'
 import { Inject } from '@nestjs/common'
 import { IOrganizationRepository, ORGANIZATION_REPOSITORY } from './domain/organization.repository'
 import { ClinicApiService } from '../clinic-api/clinic-api.service'
@@ -36,6 +39,7 @@ export class OrganizationsController {
     private readonly updateOrgStatus: UpdateOrgStatusUseCase,
     private readonly listOrgs: ListOrganizationsUseCase,
     private readonly resetClinicUserPassword: ResetClinicUserPasswordUseCase,
+    private readonly changePlanAdmin: ChangePlanAdminUseCase,
     private readonly resolveClinicId: ResolveClinicId,
     private readonly clinicApi: ClinicApiService,
     private readonly orgEvents: OrgEventService,
@@ -112,6 +116,18 @@ export class OrganizationsController {
   @Roles('SUPER_ADMIN')
   remove(@Param('id', ParseUUIDPipe) id: string) {
     return this.repo.delete(id)
+  }
+
+  // ─── Gerenciamento de assinatura (admin) ────────────────────
+
+  @Patch(':id/subscription/plan')
+  @Roles('SUPER_ADMIN')
+  @HttpCode(HttpStatus.OK)
+  changePlan(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: ChangeOrgPlanDto,
+  ) {
+    return this.changePlanAdmin.execute(id, dto.planId)
   }
 
   // ─── Timeline de eventos ─────────────────────────────────────
