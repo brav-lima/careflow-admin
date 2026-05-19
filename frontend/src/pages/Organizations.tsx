@@ -91,7 +91,6 @@ export function OrganizationsPage() {
                 <th>Organização</th>
                 <th>CNPJ</th>
                 <th style={{ textAlign: 'right' }}>MRR</th>
-                <th style={{ textAlign: 'right' }}>Usuários</th>
                 <th>Status</th>
                 <th>Cliente desde</th>
                 <th style={{ width: 32 }} />
@@ -101,7 +100,7 @@ export function OrganizationsPage() {
               {isLoading ? (
                 Array.from({ length: 6 }).map((_, i) => (
                   <tr key={i}>
-                    {Array.from({ length: 8 }).map((_, j) => (
+                    {Array.from({ length: 7 }).map((_, j) => (
                       <td key={j}><Skeleton className="h-4 w-full" /></td>
                     ))}
                   </tr>
@@ -126,7 +125,6 @@ export function OrganizationsPage() {
                   <td className="num" style={{ textAlign: 'right', fontFamily: 'var(--font-mono)', fontSize: 12, color: 'var(--text-2)' }}>
                     {org.mrr != null ? formatCurrency(org.mrr) : '—'}
                   </td>
-                  <td className="num" style={{ textAlign: 'right', fontFamily: 'var(--font-mono)', fontSize: 12, color: 'var(--text-2)' }}>—</td>
                   <td>
                     {org.status === 'ACTIVE'    ? <StatusPill tone="ok">Ativa</StatusPill>
                       : org.status === 'SUSPENDED' ? <StatusPill tone="warn">Suspensa</StatusPill>
@@ -144,7 +142,7 @@ export function OrganizationsPage() {
               ))}
               {!isLoading && orgs.length === 0 && (
                 <tr>
-                  <td colSpan={8} style={{ padding: '32px 16px', textAlign: 'center', color: 'var(--text-muted)', fontSize: 13 }}>
+                  <td colSpan={7} style={{ padding: '32px 16px', textAlign: 'center', color: 'var(--text-muted)', fontSize: 13 }}>
                     Nenhuma organização encontrada
                   </td>
                 </tr>
