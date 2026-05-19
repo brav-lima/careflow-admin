@@ -4,6 +4,7 @@ import { map } from 'rxjs/operators'
 
 function coerceDecimals(value: unknown): unknown {
   if (value === null || value === undefined) return value
+  if (value instanceof Date) return value
   // Prisma Decimal (decimal.js) exposes toNumber()
   if (typeof value === 'object' && typeof (value as { toNumber?: unknown }).toNumber === 'function') {
     return (value as { toNumber: () => number }).toNumber()
