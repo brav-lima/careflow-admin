@@ -5,6 +5,7 @@ import { CreateOrganizationWithOwnerUseCase } from './application/create-organiz
 import { UpdateOrgStatusUseCase } from './application/update-status.usecase'
 import { ListOrganizationsUseCase } from './application/list-organizations.usecase'
 import { ResetClinicUserPasswordUseCase } from './application/reset-clinic-user-password.usecase'
+import { ChangePlanAdminUseCase } from './application/change-plan-admin.usecase'
 import { ResolveClinicId } from './application/resolve-clinic-id'
 import { ResolveTrialPlan } from './application/resolve-trial-plan'
 import { OrgEventService } from './application/org-event.service'
@@ -19,6 +20,7 @@ import { ORGANIZATION_REPOSITORY } from './domain/organization.repository'
     UpdateOrgStatusUseCase,
     ListOrganizationsUseCase,
     ResetClinicUserPasswordUseCase,
+    ChangePlanAdminUseCase,
     ResolveClinicId,
     ResolveTrialPlan,
     OrgEventService,

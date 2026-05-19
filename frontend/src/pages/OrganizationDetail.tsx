@@ -1,8 +1,9 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useParams, Link } from 'react-router-dom'
+import { useState } from 'react'
 import { api } from '@/lib/api'
 import { formatDate, formatCNPJ, formatCurrency, getErrorMessage } from '@/lib/utils'
-import type { Organization, OrgStatus, Subscription, Invoice } from '@/types/admin'
+import type { Organization, OrgStatus, Subscription, Invoice, Plan } from '@/types/admin'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useToast } from '@/contexts/ToastContext'
 import { ClinicUsersSection } from '@/components/organizations/ClinicUsersSection'
@@ -50,6 +51,115 @@ const statusLabel: Record<OrgStatus, { label: string; className: string }> = {
   ACTIVE:    { label: 'Ativa',     className: 'ok' },
   SUSPENDED: { label: 'Suspensa',  className: 'warn' },
   CANCELED:  { label: 'Cancelada', className: 'muted' },
+}
+
+function SubscriptionCard({ organizationId, subscription }: { organizationId: string; subscription: Subscription }) {
+  const [selectedPlanId, setSelectedPlanId] = useState(subscription.planId)
+  const [changing, setChanging] = useState(false)
+  const queryClient = useQueryClient()
+  const { toast } = useToast()
+
+  const { data: plans } = useQuery<Plan[]>({
+    queryKey: ['plans'],
+    queryFn: () => api.get('/plans').then((r) => r.data),
+  })
+
+  const changePlan = useMutation({
+    mutationFn: (planId: string) =>
+      api.patch(`/organizations/${organizationId}/subscription/plan`, { planId }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['subscriptions', organizationId] })
+      queryClient.invalidateQueries({ queryKey: ['organization', organizationId] })
+      toast.success('Plano alterado com sucesso')
+      setChanging(false)
+    },
+    onError: (err) => toast.error(getErrorMessage(err)),
+  })
+
+  const activePlans = plans?.filter((p) => p.isActive) ?? []
+  const dirty = selectedPlanId !== subscription.planId
+
+  return (
+    <Card>
+      <CardHeader
+        title="Assinatura atual"
+        actions={
+          <button
+            onClick={() => setChanging((v) => !v)}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 6, height: 28, padding: '0 10px', borderRadius: 6, border: '1px solid transparent', background: 'transparent', fontSize: 12.5, fontWeight: 500, cursor: 'pointer', color: 'var(--p)', fontFamily: 'var(--font-sans)' }}
+          >
+            {changing ? 'Cancelar' : 'Alterar plano'}
+          </button>
+        }
+      />
+      <div style={{ padding: 18, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+        <FieldItem label="Plano" value={subscription.plan?.name ?? '—'} />
+        <FieldItem label="Valor" value={subscription.plan ? `${formatCurrency(subscription.plan.priceMonthly)}/mês` : '—'} mono />
+        <FieldItem label="Início" value={formatDate(subscription.startDate)} mono />
+        <FieldItem label="Status" value={subscription.status} />
+      </div>
+      {changing && (
+        <div style={{ padding: '0 18px 18px', borderTop: '1px solid var(--divider)', paddingTop: 14, display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <div style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 500 }}>Selecionar novo plano</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            {activePlans.map((plan) => (
+              <label
+                key={plan.id}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 8,
+                  border: `1px solid ${selectedPlanId === plan.id ? 'var(--p-border)' : 'var(--ds-border)'}`,
+                  background: selectedPlanId === plan.id ? 'hsl(16 65% 44% / 0.05)' : 'var(--surface)',
+                  cursor: 'pointer', transition: 'border-color 0.1s',
+                }}
+              >
+                <input
+                  type="radio"
+                  name="plan-select"
+                  value={plan.id}
+                  checked={selectedPlanId === plan.id}
+                  onChange={() => setSelectedPlanId(plan.id)}
+                  style={{ accentColor: 'var(--p)' }}
+                />
+                <div style={{ flex: 1 }}>
+                  <div className="flex items-center gap-2">
+                    <span style={{ fontSize: 13.5, fontWeight: 600, color: 'var(--text)' }}>{plan.name}</span>
+                    {!plan.visibleToClinic && (
+                      <span style={{ fontSize: 10, fontWeight: 600, letterSpacing: '0.04em', textTransform: 'uppercase', padding: '1px 6px', borderRadius: 999, background: 'hsl(260 60% 95%)', color: 'hsl(260 50% 45%)', border: '1px solid hsl(260 50% 85%)' }}>
+                        Admin only
+                      </span>
+                    )}
+                    {plan.id === subscription.planId && (
+                      <span style={{ fontSize: 10, fontWeight: 600, letterSpacing: '0.04em', textTransform: 'uppercase', padding: '1px 6px', borderRadius: 999, background: 'var(--ok-soft)', color: 'var(--ok-ink)', border: '1px solid var(--ok-border)' }}>
+                        Atual
+                      </span>
+                    )}
+                  </div>
+                  <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 1 }}>
+                    {formatCurrency(plan.priceMonthly)}/mês · {plan.maxUsers} usuários · {plan.maxPatients.toLocaleString('pt-BR')} pacientes
+                  </div>
+                </div>
+              </label>
+            ))}
+          </div>
+          <div className="flex justify-end gap-2" style={{ marginTop: 4 }}>
+            <button
+              disabled={!dirty || changePlan.isPending}
+              onClick={() => changePlan.mutate(selectedPlanId)}
+              style={{
+                display: 'inline-flex', alignItems: 'center', height: 32, padding: '0 14px', borderRadius: 8,
+                border: 'none', background: dirty ? 'var(--p)' : 'var(--surface-3)',
+                color: dirty ? 'white' : 'var(--text-faint)', fontSize: 13, fontWeight: 500,
+                cursor: dirty ? 'pointer' : 'not-allowed', fontFamily: 'var(--font-sans)',
+                boxShadow: dirty ? 'var(--shadow-brand)' : 'none', opacity: changePlan.isPending ? 0.6 : 1,
+              }}
+            >
+              {changePlan.isPending ? 'Salvando...' : 'Confirmar alteração'}
+            </button>
+          </div>
+        </div>
+      )}
+    </Card>
+  )
 }
 
 export function OrganizationDetailPage() {
@@ -303,15 +413,7 @@ export function OrganizationDetailPage() {
           )}
 
           {activeSubscription && (
-            <Card>
-              <CardHeader title="Assinatura atual" />
-              <div style={{ padding: 18, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-                <FieldItem label="Plano" value={activeSubscription.plan?.name ?? '—'} />
-                <FieldItem label="Valor" value={activeSubscription.plan ? `${formatCurrency(activeSubscription.plan.priceMonthly)}/mês` : '—'} mono />
-                <FieldItem label="Início" value={formatDate(activeSubscription.startDate)} mono />
-                <FieldItem label="Status" value={activeSubscription.status} />
-              </div>
-            </Card>
+            <SubscriptionCard organizationId={id!} subscription={activeSubscription} />
           )}
         </div>
       </div>

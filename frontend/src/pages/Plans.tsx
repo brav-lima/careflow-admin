@@ -58,8 +58,15 @@ function PlanCard({ plan, isHighlight }: { plan: Plan; isHighlight: boolean }) {
       <div style={{ padding: '22px 20px 18px', borderBottom: '1px solid var(--divider)' }}>
         <div className="flex items-start justify-between">
           <div>
-            <div style={{ fontSize: 16, fontWeight: 600, letterSpacing: '-0.012em', color: 'var(--text)', fontFamily: 'var(--font-display)' }}>
-              {plan.name}
+            <div className="flex items-center gap-2">
+              <div style={{ fontSize: 16, fontWeight: 600, letterSpacing: '-0.012em', color: 'var(--text)', fontFamily: 'var(--font-display)' }}>
+                {plan.name}
+              </div>
+              {!plan.visibleToClinic && (
+                <span style={{ fontSize: 10.5, fontWeight: 600, letterSpacing: '0.04em', textTransform: 'uppercase', padding: '2px 7px', borderRadius: 999, background: 'hsl(260 60% 95%)', color: 'hsl(260 50% 45%)', border: '1px solid hsl(260 50% 85%)', whiteSpace: 'nowrap' }}>
+                  Admin only
+                </span>
+              )}
             </div>
             <div style={{ fontSize: 12.5, color: 'var(--text-muted)', marginTop: 2 }}>
               {plan.maxPatients >= 999999
