@@ -1,18 +1,28 @@
 import { useQuery } from '@tanstack/react-query'
 import { api } from '@/lib/api'
-import type { Plan } from '@/types/admin'
+import type { Plan, PlanFeatureKey } from '@/types/admin'
 import { Skeleton } from '@/components/ui/skeleton'
 import { PlanFormModal } from '@/components/plans/PlanFormModal'
 import { StatusPill, PageHeader } from '@/components/ui/ds'
 
+const FEATURE_LABELS: Record<PlanFeatureKey, string> = {
+  AGENDA:              'Agenda',
+  PATIENTS:            'Pacientes (ilimitados)',
+  FINANCIAL_BASIC:     'Financeiro básico',
+  FINANCIAL_ADVANCED:  'Relatórios financeiros avançados',
+  PERINEAL_ASSESSMENT: 'Avaliação perineal',
+  TREATMENT_PACKAGES:  'Pacotes de tratamento',
+  ANAMNESIS:           'Anamnese personalizada',
+  EVOLUTIONS:          'Prontuários e evoluções',
+  ROLES:               'Perfis por função',
+  MULTI_PROFESSIONAL:  'Múltiplos profissionais',
+  MULTI_CLINIC:        'Multi-clínica',
+  PRIORITY_SUPPORT:    'Suporte prioritário',
+}
+
 const CheckIcon = () => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ width: 10, height: 10 }}>
     <path d="M5 12.5 10 17.5l9-11"/>
-  </svg>
-)
-const XIcon = () => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ width: 8, height: 8 }}>
-    <path d="M6 6l12 12M18 6 6 18"/>
   </svg>
 )
 const ClockIcon = () => (
@@ -100,23 +110,23 @@ function PlanCard({ plan, isHighlight }: { plan: Plan; isHighlight: boolean }) {
       </div>
 
       {/* Features */}
-      {plan.features && (
+      {plan.features && plan.features.length > 0 && (
         <div style={{ padding: '12px 20px 16px' }}>
           <div style={{ fontSize: 11, fontWeight: 500, color: 'var(--text-muted)', letterSpacing: '0.05em', textTransform: 'uppercase', marginBottom: 8 }}>
-            Funcionalidades
+            Funcionalidades ({plan.features.length})
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-            {Object.entries(plan.features).map(([key, enabled]) => (
-              <div key={key} className="flex items-center gap-2" style={{ fontSize: 12.5, color: enabled ? 'var(--text)' : 'var(--text-faint)' }}>
+            {plan.features.map((key) => (
+              <div key={key} className="flex items-center gap-2" style={{ fontSize: 12.5, color: 'var(--text)' }}>
                 <span style={{
                   width: 16, height: 16, borderRadius: 4,
                   display: 'grid', placeItems: 'center', flexShrink: 0,
-                  background: enabled ? 'var(--ok-soft)' : 'var(--surface-3)',
-                  color: enabled ? 'var(--ok-ink)' : 'var(--text-faint)',
+                  background: 'var(--ok-soft)',
+                  color: 'var(--ok-ink)',
                 }}>
-                  {enabled ? <CheckIcon /> : <XIcon />}
+                  <CheckIcon />
                 </span>
-                {key}
+                {FEATURE_LABELS[key as PlanFeatureKey] ?? key}
               </div>
             ))}
           </div>
