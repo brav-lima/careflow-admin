@@ -71,7 +71,13 @@ export function PlanFormModal({ plan }: Props) {
 
   useEffect(() => {
     if (open && plan?.features) {
-      setSelectedFeatures(new Set(plan.features))
+      // Compatibilidade com planos antigos cujo features ainda é { nfse: true, ... }
+      const keys: PlanFeatureKey[] = Array.isArray(plan.features)
+        ? plan.features
+        : Object.entries(plan.features as unknown as Record<string, boolean>)
+            .filter(([, v]) => v)
+            .map(([k]) => k as PlanFeatureKey)
+      setSelectedFeatures(new Set(keys))
     } else if (!open) {
       setSelectedFeatures(new Set())
       reset()
