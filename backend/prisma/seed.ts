@@ -9,35 +9,53 @@ const prisma = new PrismaClient({ adapter })
 async function main() {
   console.log('🌱 Seeding admin database...')
 
-  // Planos padrão
+  // Planos padrão — features como array de PlanFeatureKey (alinhado com pelvi-ui)
   const plans = [
     {
       name: 'Trial',
       priceMonthly: 0,
-      maxUsers: 3,
-      maxPatients: 50,
-      features: { nfse: false, whatsapp: false, reports: false, trial: true },
+      maxUsers: 4,
+      maxPatients: 999999,
+      isActive: true,
+      visibleToClinic: false,
+      features: [
+        'AGENDA', 'PATIENTS', 'FINANCIAL_BASIC',
+        'PERINEAL_ASSESSMENT', 'TREATMENT_PACKAGES', 'EVOLUTIONS',
+        'FINANCIAL_ADVANCED', 'ANAMNESIS', 'ROLES', 'MULTI_PROFESSIONAL',
+      ],
     },
     {
-      name: 'Básico',
-      priceMonthly: 97,
-      maxUsers: 3,
-      maxPatients: 200,
-      features: { nfse: false, whatsapp: false, reports: true },
-    },
-    {
-      name: 'Profissional',
-      priceMonthly: 197,
-      maxUsers: 10,
-      maxPatients: 1000,
-      features: { nfse: true, whatsapp: false, reports: true },
+      name: 'Solo',
+      priceMonthly: 89,
+      maxUsers: 1,
+      maxPatients: 999999,
+      features: [
+        'AGENDA', 'PATIENTS', 'FINANCIAL_BASIC',
+        'PERINEAL_ASSESSMENT', 'TREATMENT_PACKAGES', 'EVOLUTIONS',
+      ],
     },
     {
       name: 'Clínica',
-      priceMonthly: 397,
-      maxUsers: 999,
+      priceMonthly: 179,
+      maxUsers: 4,
       maxPatients: 999999,
-      features: { nfse: true, whatsapp: true, reports: true },
+      features: [
+        'AGENDA', 'PATIENTS', 'FINANCIAL_BASIC', 'FINANCIAL_ADVANCED',
+        'PERINEAL_ASSESSMENT', 'TREATMENT_PACKAGES', 'ANAMNESIS',
+        'EVOLUTIONS', 'ROLES', 'MULTI_PROFESSIONAL',
+      ],
+    },
+    {
+      name: 'Rede',
+      priceMonthly: 349,
+      maxUsers: 10,
+      maxPatients: 999999,
+      features: [
+        'AGENDA', 'PATIENTS', 'FINANCIAL_BASIC', 'FINANCIAL_ADVANCED',
+        'PERINEAL_ASSESSMENT', 'TREATMENT_PACKAGES', 'ANAMNESIS',
+        'EVOLUTIONS', 'ROLES', 'MULTI_PROFESSIONAL',
+        'MULTI_CLINIC', 'PRIORITY_SUPPORT',
+      ],
     },
   ]
 

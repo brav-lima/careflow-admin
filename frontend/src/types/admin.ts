@@ -25,13 +25,28 @@ export interface Organization {
   userCount?: number | null
 }
 
+// Feature keys habilitadas num plano — alinhado com PlanFeature em pelvi-ui
+export type PlanFeatureKey =
+  | 'AGENDA'
+  | 'PATIENTS'
+  | 'FINANCIAL_BASIC'
+  | 'FINANCIAL_ADVANCED'
+  | 'PERINEAL_ASSESSMENT'
+  | 'TREATMENT_PACKAGES'
+  | 'ANAMNESIS'
+  | 'EVOLUTIONS'
+  | 'ROLES'
+  | 'MULTI_PROFESSIONAL'
+  | 'MULTI_CLINIC'
+  | 'PRIORITY_SUPPORT'
+
 export interface Plan {
   id: string
   name: string
   priceMonthly: number
   maxUsers: number
   maxPatients: number
-  features: Record<string, boolean> | null
+  features: PlanFeatureKey[] | null
   isActive: boolean
   visibleToClinic: boolean
   createdAt: string

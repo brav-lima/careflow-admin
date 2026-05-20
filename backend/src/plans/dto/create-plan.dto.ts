@@ -1,4 +1,4 @@
-import { IsString, IsNumber, IsOptional, IsBoolean, Min, IsObject } from 'class-validator'
+import { IsString, IsNumber, IsOptional, IsBoolean, Min, IsArray } from 'class-validator'
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger'
 import { Type } from 'class-transformer'
 
@@ -25,10 +25,14 @@ export class CreatePlanDto {
   @Min(1)
   maxPatients: number
 
-  @ApiPropertyOptional({ example: { nfse: true, whatsapp: false } })
+  @ApiPropertyOptional({
+    example: ['AGENDA', 'PATIENTS', 'FINANCIAL_BASIC', 'EVOLUTIONS'],
+    description: 'Feature keys habilitadas neste plano (ver PlanFeature em pelvi-ui)',
+  })
   @IsOptional()
-  @IsObject()
-  features?: Record<string, boolean>
+  @IsArray()
+  @IsString({ each: true })
+  features?: string[]
 
   @ApiPropertyOptional({ default: true })
   @IsOptional()

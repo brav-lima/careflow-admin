@@ -10,14 +10,22 @@ import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import type { Plan } from '@/types/admin'
+import type { Plan, PlanFeatureKey } from '@/types/admin'
 import { Plus, Pencil } from 'lucide-react'
 
-const FEATURES = [
-  { key: 'nfse', label: 'Nota Fiscal (NFS-e)' },
-  { key: 'whatsapp', label: 'WhatsApp' },
-  { key: 'agendamento_online', label: 'Agendamento Online' },
-  { key: 'relatorios', label: 'Relatórios Avançados' },
+const ALL_FEATURES: { key: PlanFeatureKey; label: string }[] = [
+  { key: 'AGENDA',               label: 'Agenda' },
+  { key: 'PATIENTS',             label: 'Pacientes (ilimitados)' },
+  { key: 'FINANCIAL_BASIC',      label: 'Financeiro básico' },
+  { key: 'FINANCIAL_ADVANCED',   label: 'Relatórios financeiros avançados' },
+  { key: 'PERINEAL_ASSESSMENT',  label: 'Avaliação perineal' },
+  { key: 'TREATMENT_PACKAGES',   label: 'Pacotes de tratamento' },
+  { key: 'ANAMNESIS',            label: 'Anamnese personalizada' },
+  { key: 'EVOLUTIONS',           label: 'Prontuários e evoluções' },
+  { key: 'ROLES',                label: 'Perfis por função (Admin/Prof/Recep)' },
+  { key: 'MULTI_PROFESSIONAL',   label: 'Múltiplos profissionais' },
+  { key: 'MULTI_CLINIC',         label: 'Multi-clínica' },
+  { key: 'PRIORITY_SUPPORT',     label: 'Suporte prioritário' },
 ]
 
 const schema = z.object({
@@ -37,7 +45,7 @@ interface Props {
 
 export function PlanFormModal({ plan }: Props) {
   const [open, setOpen] = useState(false)
-  const [features, setFeatures] = useState<Record<string, boolean>>({})
+  const [selectedFeatures, setSelectedFeatures] = useState<Set<PlanFeatureKey>>(new Set())
   const queryClient = useQueryClient()
   const { toast } = useToast()
   const isEditing = !!plan
@@ -50,35 +58,49 @@ export function PlanFormModal({ plan }: Props) {
   } = useForm<FormData>({
     resolver: zodResolver(schema),
     defaultValues: plan
-      ? { name: plan.name, priceMonthly: plan.priceMonthly, maxUsers: plan.maxUsers, maxPatients: plan.maxPatients, isActive: plan.isActive, visibleToClinic: plan.visibleToClinic }
+      ? {
+          name: plan.name,
+          priceMonthly: plan.priceMonthly,
+          maxUsers: plan.maxUsers,
+          maxPatients: plan.maxPatients,
+          isActive: plan.isActive,
+          visibleToClinic: plan.visibleToClinic,
+        }
       : { isActive: true, visibleToClinic: true },
   })
 
   useEffect(() => {
     if (open && plan?.features) {
-      setFeatures(plan.features)
+      setSelectedFeatures(new Set(plan.features))
     } else if (!open) {
-      setFeatures({})
+      setSelectedFeatures(new Set())
+      reset()
     }
-  }, [open, plan])
+  }, [open, plan, reset])
+
+  const toggleFeature = (key: PlanFeatureKey) => {
+    setSelectedFeatures((prev) => {
+      const next = new Set(prev)
+      next.has(key) ? next.delete(key) : next.add(key)
+      return next
+    })
+  }
 
   const mutation = useMutation({
     mutationFn: (data: FormData) => {
-      const body = { ...data, features: Object.keys(features).length > 0 ? features : undefined }
-      return isEditing ? api.patch(`/plans/${plan.id}`, body) : api.post('/plans', body)
+      const features = selectedFeatures.size > 0 ? [...selectedFeatures] : undefined
+      const body = { ...data, features }
+      return isEditing
+        ? api.patch(`/plans/${plan.id}`, body)
+        : api.post('/plans', body)
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['plans'] })
       toast.success(isEditing ? 'Plano atualizado' : 'Plano criado com sucesso')
-      reset()
       setOpen(false)
     },
     onError: (err) => toast.error(getErrorMessage(err)),
   })
-
-  const toggleFeature = (key: string) => {
-    setFeatures((prev) => ({ ...prev, [key]: !prev[key] }))
-  }
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -99,37 +121,90 @@ export function PlanFormModal({ plan }: Props) {
         <form onSubmit={handleSubmit((d) => mutation.mutate(d))} className="space-y-4">
           <div className="space-y-1.5">
             <Label htmlFor="plan-name">Nome *</Label>
-            <Input id="plan-name" placeholder="Profissional" {...register('name')} error={errors.name?.message} />
+            <Input
+              id="plan-name"
+              placeholder="Profissional"
+              {...register('name')}
+              error={errors.name?.message}
+            />
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label htmlFor="price">Preço/mês (R$) *</Label>
-              <Input id="price" type="number" step="0.01" placeholder="197.00" {...register('priceMonthly')} error={errors.priceMonthly?.message} />
+              <Input
+                id="price"
+                type="number"
+                step="0.01"
+                placeholder="197.00"
+                {...register('priceMonthly')}
+                error={errors.priceMonthly?.message}
+              />
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="maxUsers">Máx. usuários *</Label>
-              <Input id="maxUsers" type="number" placeholder="10" {...register('maxUsers')} error={errors.maxUsers?.message} />
+              <Input
+                id="maxUsers"
+                type="number"
+                placeholder="10"
+                {...register('maxUsers')}
+                error={errors.maxUsers?.message}
+              />
             </div>
           </div>
 
           <div className="space-y-1.5">
             <Label htmlFor="maxPatients">Máx. pacientes *</Label>
-            <Input id="maxPatients" type="number" placeholder="1000" {...register('maxPatients')} error={errors.maxPatients?.message} />
+            <Input
+              id="maxPatients"
+              type="number"
+              placeholder="1000"
+              {...register('maxPatients')}
+              error={errors.maxPatients?.message}
+            />
           </div>
 
           <div className="space-y-2">
-            <Label>Funcionalidades</Label>
-            <div className="grid grid-cols-2 gap-2">
-              {FEATURES.map(({ key, label }) => (
-                <label key={key} className="flex items-center gap-2 text-sm cursor-pointer">
+            <div className="flex items-center justify-between">
+              <Label>
+                Funcionalidades
+                <span style={{ marginLeft: 6, fontSize: 11.5, color: 'var(--text-muted)', fontWeight: 400 }}>
+                  ({selectedFeatures.size} selecionadas)
+                </span>
+              </Label>
+            </div>
+            <div
+              style={{
+                border: '1px solid var(--ds-border)',
+                borderRadius: 8,
+                overflow: 'hidden',
+                maxHeight: 260,
+                overflowY: 'auto',
+              }}
+            >
+              {ALL_FEATURES.map(({ key, label }, i) => (
+                <label
+                  key={key}
+                  className="flex items-center gap-2.5 cursor-pointer"
+                  style={{
+                    padding: '7px 12px',
+                    fontSize: 13,
+                    borderBottom: i < ALL_FEATURES.length - 1 ? '1px solid var(--divider)' : 'none',
+                    background: selectedFeatures.has(key) ? 'var(--ok-soft)' : 'transparent',
+                    color: selectedFeatures.has(key) ? 'var(--ok-ink)' : 'var(--text)',
+                    transition: 'background 0.1s',
+                  }}
+                >
                   <input
                     type="checkbox"
-                    checked={!!features[key]}
+                    checked={selectedFeatures.has(key)}
                     onChange={() => toggleFeature(key)}
-                    className="rounded border-input"
+                    style={{ accentColor: 'var(--p)', flexShrink: 0 }}
                   />
-                  {label}
+                  <span style={{ flex: 1 }}>{label}</span>
+                  <code style={{ fontSize: 10.5, color: 'var(--text-faint)', fontFamily: 'var(--font-mono)' }}>
+                    {key}
+                  </code>
                 </label>
               ))}
             </div>
@@ -143,7 +218,9 @@ export function PlanFormModal({ plan }: Props) {
             <label className="flex items-center gap-2 text-sm cursor-pointer">
               <input type="checkbox" {...register('visibleToClinic')} className="rounded border-input" />
               <span>Visível na interface da clínica</span>
-              <span style={{ fontSize: 11.5, color: 'var(--text-muted)', marginLeft: 2 }}>(desmarcar = somente via admin)</span>
+              <span style={{ fontSize: 11.5, color: 'var(--text-muted)', marginLeft: 2 }}>
+                (desmarcar = somente via admin)
+              </span>
             </label>
           </div>
 
@@ -152,7 +229,11 @@ export function PlanFormModal({ plan }: Props) {
               Cancelar
             </Button>
             <Button type="submit" disabled={mutation.isPending}>
-              {mutation.isPending ? 'Salvando...' : isEditing ? 'Salvar Alterações' : 'Criar Plano'}
+              {mutation.isPending
+                ? 'Salvando...'
+                : isEditing
+                ? 'Salvar Alterações'
+                : 'Criar Plano'}
             </Button>
           </div>
         </form>
