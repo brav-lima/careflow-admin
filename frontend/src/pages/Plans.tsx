@@ -1,24 +1,9 @@
 import { useQuery } from '@tanstack/react-query'
 import { api } from '@/lib/api'
-import type { Plan, PlanFeatureKey } from '@/types/admin'
+import type { Plan, FeatureDefinition } from '@/types/admin'
 import { Skeleton } from '@/components/ui/skeleton'
 import { PlanFormModal } from '@/components/plans/PlanFormModal'
 import { StatusPill, PageHeader } from '@/components/ui/ds'
-
-const FEATURE_LABELS: Record<PlanFeatureKey, string> = {
-  AGENDA:              'Agenda',
-  PATIENTS:            'Pacientes (ilimitados)',
-  FINANCIAL_BASIC:     'Financeiro básico',
-  FINANCIAL_ADVANCED:  'Relatórios financeiros avançados',
-  PERINEAL_ASSESSMENT: 'Avaliação perineal',
-  TREATMENT_PACKAGES:  'Pacotes de tratamento',
-  ANAMNESIS:           'Anamnese personalizada',
-  EVOLUTIONS:          'Prontuários e evoluções',
-  ROLES:               'Perfis por função',
-  MULTI_PROFESSIONAL:  'Múltiplos profissionais',
-  MULTI_CLINIC:        'Multi-clínica',
-  PRIORITY_SUPPORT:    'Suporte prioritário',
-}
 
 const CheckIcon = () => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ width: 10, height: 10 }}>
@@ -37,7 +22,7 @@ const PLAN_COLORS: Record<string, { border: string; shadow?: string; accent: str
   Scale:     { border: 'hsl(20 25% 28%)', accent: 'hsl(20 25% 18%)' },
 }
 
-function PlanCard({ plan, isHighlight }: { plan: Plan; isHighlight: boolean }) {
+function PlanCard({ plan, isHighlight, featureLabels }: { plan: Plan; isHighlight: boolean; featureLabels: Record<string, string> }) {
   const colors = PLAN_COLORS[plan.name] ?? PLAN_COLORS.Essential
   const maxUsers = plan.maxUsers >= 999 ? 'Ilimitado' : plan.maxUsers
   const maxPatients = plan.maxPatients >= 999999 ? 'Ilimitado' : plan.maxPatients.toLocaleString('pt-BR')
@@ -126,7 +111,7 @@ function PlanCard({ plan, isHighlight }: { plan: Plan; isHighlight: boolean }) {
                 }}>
                   <CheckIcon />
                 </span>
-                {FEATURE_LABELS[key as PlanFeatureKey] ?? key}
+                {featureLabels[key] ?? key}
               </div>
             ))}
           </div>
@@ -149,6 +134,16 @@ export function PlansPage() {
     queryKey: ['plans'],
     queryFn: () => api.get('/plans').then((r) => r.data),
   })
+
+  const { data: featuredefs = [] } = useQuery<FeatureDefinition[]>({
+    queryKey: ['plan-features'],
+    queryFn: () => api.get('/plan-features').then((r) => r.data),
+    staleTime: 60_000,
+  })
+
+  const featureLabels: Record<string, string> = Object.fromEntries(
+    featuredefs.map((f) => [f.key, f.label])
+  )
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
@@ -182,7 +177,7 @@ export function PlansPage() {
       ) : (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 }}>
           {plans?.map((plan) => (
-            <PlanCard key={plan.id} plan={plan} isHighlight={plan.name === PLAN_HIGHLIGHT} />
+            <PlanCard key={plan.id} plan={plan} isHighlight={plan.name === PLAN_HIGHLIGHT} featureLabels={featureLabels} />
           ))}
         </div>
       )}

@@ -6,8 +6,34 @@ import { randomBytes } from 'crypto'
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_ADMIN_URL! })
 const prisma = new PrismaClient({ adapter })
 
+const FEATURE_DEFINITIONS = [
+  { key: 'AGENDA',              label: 'Agenda',                              description: 'Agendamento de consultas com visões dia/semana/mês e drag-and-drop',       sortOrder: 1 },
+  { key: 'PATIENTS',            label: 'Pacientes (ilimitados)',               description: 'Cadastro e gestão completa de pacientes com histórico clínico',            sortOrder: 2 },
+  { key: 'FINANCIAL_BASIC',     label: 'Financeiro básico',                   description: 'Registro de receitas e despesas vinculadas a consultas e pacientes',       sortOrder: 3 },
+  { key: 'FINANCIAL_ADVANCED',  label: 'Relatórios financeiros avançados',    description: 'Resumos mensais, extratos e análises financeiras avançadas',               sortOrder: 4 },
+  { key: 'PERINEAL_ASSESSMENT', label: 'Avaliação perineal',                  description: 'Wizard de avaliação do assoalho pélvico em 6 etapas com dados flexíveis',  sortOrder: 5 },
+  { key: 'TREATMENT_PACKAGES',  label: 'Pacotes de tratamento',               description: 'Criação e controle de pacotes de sessões por paciente',                    sortOrder: 6 },
+  { key: 'ANAMNESIS',           label: 'Anamnese personalizada',              description: 'Formulários de anamnese com estrutura livre em JSON por clínica',          sortOrder: 7 },
+  { key: 'EVOLUTIONS',          label: 'Prontuários e evoluções',             description: 'Linha do tempo de evoluções clínicas vinculadas a consultas',              sortOrder: 8 },
+  { key: 'ROLES',               label: 'Perfis por função',                   description: 'Controle de acesso por papel: Admin, Profissional e Recepcionista',        sortOrder: 9 },
+  { key: 'MULTI_PROFESSIONAL',  label: 'Múltiplos profissionais',             description: 'Gestão de equipe com vários profissionais na mesma clínica',               sortOrder: 10 },
+  { key: 'MULTI_CLINIC',        label: 'Multi-clínica',                       description: 'Um usuário administrador gerenciando múltiplas unidades',                  sortOrder: 11 },
+  { key: 'PRIORITY_SUPPORT',    label: 'Suporte prioritário',                 description: 'Atendimento prioritário por canais dedicados',                             sortOrder: 12 },
+  { key: 'DOCUMENTS',           label: 'Módulo de Documentos',                description: 'Geração e armazenamento de documentos PDF para pacientes',                 sortOrder: 13 },
+]
+
 async function main() {
   console.log('🌱 Seeding admin database...')
+
+  // Feature definitions — single source of truth para features disponíveis no sistema
+  for (const feature of FEATURE_DEFINITIONS) {
+    await prisma.planFeatureDefinition.upsert({
+      where: { key: feature.key },
+      update: { label: feature.label, description: feature.description, sortOrder: feature.sortOrder },
+      create: feature,
+    })
+  }
+  console.log(`✅ ${FEATURE_DEFINITIONS.length} feature definitions sincronizadas`)
 
   // Planos padrão — features como array de PlanFeatureKey (alinhado com pelvi-ui)
   const plans = [

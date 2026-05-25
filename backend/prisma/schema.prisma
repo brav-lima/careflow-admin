@@ -88,6 +88,25 @@ model Organization {
 }
 
 // ──────────────────────────────────────────────
+// PlanFeatureDefinition — catálogo de features disponíveis no sistema
+// Single source of truth; planos referenciam as keys dessa tabela via JSONB
+// ──────────────────────────────────────────────
+
+model PlanFeatureDefinition {
+  id          String   @id @default(uuid())
+  key         String   @unique
+  label       String
+  description String?
+  active      Boolean  @default(true)
+  sortOrder   Int      @default(0) @map("sort_order")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@index([active])
+  @@map("plan_feature_definitions")
+}
+
+// ──────────────────────────────────────────────
 // Plan — planos de assinatura
 // ──────────────────────────────────────────────
 
