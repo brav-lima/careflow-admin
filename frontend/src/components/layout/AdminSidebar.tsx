@@ -78,12 +78,22 @@ function UserAvatar({ name, size = 28 }: { name: string; size?: number }) {
   )
 }
 
+const FeaturesIcon = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" className="w-3.5 h-3.5 shrink-0">
+    <path d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v18m0 0h10a2 2 0 0 0 2-2V9M9 21H5a2 2 0 0 1-2-2V9m0 0h18"/>
+  </svg>
+)
+
 const navItems = [
   { to: '/dashboard',     icon: DashboardIcon, label: 'Visão geral' },
   { to: '/organizations', icon: BuildingIcon,  label: 'Organizações' },
   { to: '/plans',         icon: CardIcon,      label: 'Planos' },
   { to: '/subscriptions', icon: RefreshIcon,   label: 'Assinaturas' },
   { to: '/invoices',      icon: FileIcon,      label: 'Faturas', badge: true },
+]
+
+const planSubItems = [
+  { to: '/plan-features', icon: FeaturesIcon, label: 'Features' },
 ]
 
 export function AdminSidebar() {
@@ -186,6 +196,42 @@ export function AdminSidebar() {
             )}
           </NavLink>
         ))}
+
+        {/* Sub-itens de Planos */}
+        <div style={{ marginLeft: 14, paddingLeft: 10, borderLeft: '1px solid var(--side-border)', display: 'flex', flexDirection: 'column', gap: 1 }}>
+          {planSubItems.map(({ to, icon: Icon, label }) => (
+            <NavLink
+              key={to}
+              to={to}
+              style={({ isActive }) => ({
+                display: 'flex', alignItems: 'center', gap: 8,
+                padding: '6px 8px', borderRadius: 6,
+                fontSize: 12.5, fontWeight: isActive ? 600 : 500,
+                color: isActive ? 'var(--side-active-text)' : 'var(--side-text-2)',
+                background: isActive ? 'var(--side-active-bg)' : 'transparent',
+                textDecoration: 'none',
+                transition: 'background 80ms, color 80ms',
+              })}
+              onMouseEnter={(e) => {
+                const el = e.currentTarget
+                if (!el.getAttribute('aria-current')) {
+                  el.style.background = 'var(--side-bg-2)'
+                  el.style.color = 'var(--side-text)'
+                }
+              }}
+              onMouseLeave={(e) => {
+                const el = e.currentTarget
+                if (!el.getAttribute('aria-current')) {
+                  el.style.background = 'transparent'
+                  el.style.color = 'var(--side-text-2)'
+                }
+              }}
+            >
+              <Icon />
+              <span>{label}</span>
+            </NavLink>
+          ))}
+        </div>
       </nav>
 
       {/* System section */}

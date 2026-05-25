@@ -9,6 +9,7 @@ import { DashboardPage } from '@/pages/Dashboard'
 import { OrganizationsPage } from '@/pages/Organizations'
 import { OrganizationDetailPage } from '@/pages/OrganizationDetail'
 import { PlansPage } from '@/pages/Plans'
+import { PlanFeaturesPage } from '@/pages/PlanFeatures'
 import { SubscriptionsPage } from '@/pages/Subscriptions'
 import { InvoicesPage } from '@/pages/Invoices'
 
@@ -32,6 +33,7 @@ export default function App() {
             <Route path="organizations" element={<OrganizationsPage />} />
             <Route path="organizations/:id" element={<OrganizationDetailPage />} />
             <Route path="plans" element={<PlansPage />} />
+            <Route path="plan-features" element={<PlanFeaturesPage />} />
             <Route path="subscriptions" element={<SubscriptionsPage />} />
             <Route path="invoices" element={<InvoicesPage />} />
           </Route>

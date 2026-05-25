@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { api } from '@/lib/api'
 import { getErrorMessage } from '@/lib/utils'
 import { useToast } from '@/contexts/ToastContext'
@@ -10,23 +10,8 @@ import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import type { Plan, PlanFeatureKey } from '@/types/admin'
+import type { Plan, PlanFeatureKey, FeatureDefinition } from '@/types/admin'
 import { Plus, Pencil } from 'lucide-react'
-
-const ALL_FEATURES: { key: PlanFeatureKey; label: string }[] = [
-  { key: 'AGENDA',               label: 'Agenda' },
-  { key: 'PATIENTS',             label: 'Pacientes (ilimitados)' },
-  { key: 'FINANCIAL_BASIC',      label: 'Financeiro básico' },
-  { key: 'FINANCIAL_ADVANCED',   label: 'Relatórios financeiros avançados' },
-  { key: 'PERINEAL_ASSESSMENT',  label: 'Avaliação perineal' },
-  { key: 'TREATMENT_PACKAGES',   label: 'Pacotes de tratamento' },
-  { key: 'ANAMNESIS',            label: 'Anamnese personalizada' },
-  { key: 'EVOLUTIONS',           label: 'Prontuários e evoluções' },
-  { key: 'ROLES',                label: 'Perfis por função (Admin/Prof/Recep)' },
-  { key: 'MULTI_PROFESSIONAL',   label: 'Múltiplos profissionais' },
-  { key: 'MULTI_CLINIC',         label: 'Multi-clínica' },
-  { key: 'PRIORITY_SUPPORT',     label: 'Suporte prioritário' },
-]
 
 const schema = z.object({
   name: z.string().min(2, 'Nome deve ter pelo menos 2 caracteres'),
@@ -49,6 +34,12 @@ export function PlanFormModal({ plan }: Props) {
   const queryClient = useQueryClient()
   const { toast } = useToast()
   const isEditing = !!plan
+
+  const { data: allFeatures = [] } = useQuery<FeatureDefinition[]>({
+    queryKey: ['plan-features'],
+    queryFn: () => api.get('/plan-features').then((r) => r.data),
+    staleTime: 60_000,
+  })
 
   const {
     register,
@@ -188,31 +179,37 @@ export function PlanFormModal({ plan }: Props) {
                 overflowY: 'auto',
               }}
             >
-              {ALL_FEATURES.map(({ key, label }, i) => (
-                <label
-                  key={key}
-                  className="flex items-center gap-2.5 cursor-pointer"
-                  style={{
-                    padding: '7px 12px',
-                    fontSize: 13,
-                    borderBottom: i < ALL_FEATURES.length - 1 ? '1px solid var(--divider)' : 'none',
-                    background: selectedFeatures.has(key) ? 'var(--ok-soft)' : 'transparent',
-                    color: selectedFeatures.has(key) ? 'var(--ok-ink)' : 'var(--text)',
-                    transition: 'background 0.1s',
-                  }}
-                >
-                  <input
-                    type="checkbox"
-                    checked={selectedFeatures.has(key)}
-                    onChange={() => toggleFeature(key)}
-                    style={{ accentColor: 'var(--p)', flexShrink: 0 }}
-                  />
-                  <span style={{ flex: 1 }}>{label}</span>
-                  <code style={{ fontSize: 10.5, color: 'var(--text-faint)', fontFamily: 'var(--font-mono)' }}>
-                    {key}
-                  </code>
-                </label>
-              ))}
+              {allFeatures.length === 0 ? (
+                <div style={{ padding: '16px 12px', fontSize: 13, color: 'var(--text-muted)', textAlign: 'center' }}>
+                  Nenhuma feature cadastrada. Acesse <strong>Planos → Features</strong> para cadastrar.
+                </div>
+              ) : (
+                allFeatures.map(({ key, label }, i) => (
+                  <label
+                    key={key}
+                    className="flex items-center gap-2.5 cursor-pointer"
+                    style={{
+                      padding: '7px 12px',
+                      fontSize: 13,
+                      borderBottom: i < allFeatures.length - 1 ? '1px solid var(--divider)' : 'none',
+                      background: selectedFeatures.has(key as PlanFeatureKey) ? 'var(--ok-soft)' : 'transparent',
+                      color: selectedFeatures.has(key as PlanFeatureKey) ? 'var(--ok-ink)' : 'var(--text)',
+                      transition: 'background 0.1s',
+                    }}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={selectedFeatures.has(key as PlanFeatureKey)}
+                      onChange={() => toggleFeature(key as PlanFeatureKey)}
+                      style={{ accentColor: 'var(--p)', flexShrink: 0 }}
+                    />
+                    <span style={{ flex: 1 }}>{label}</span>
+                    <code style={{ fontSize: 10.5, color: 'var(--text-faint)', fontFamily: 'var(--font-mono)' }}>
+                      {key}
+                    </code>
+                  </label>
+                ))
+              )}
             </div>
           </div>
 
