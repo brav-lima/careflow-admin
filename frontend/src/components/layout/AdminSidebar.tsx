@@ -152,61 +152,13 @@ export function AdminSidebar() {
       {/* Nav */}
       <nav className="flex-1" style={{ padding: '4px 10px', display: 'flex', flexDirection: 'column', gap: 1 }}>
         {navItems.map(({ to, icon: Icon, label, badge }) => (
-          <NavLink
-            key={to}
-            to={to}
-            style={({ isActive }) => ({
-              display: 'flex', alignItems: 'center', gap: 10,
-              padding: '8px 10px', borderRadius: 8,
-              fontSize: 13.5, fontWeight: isActive ? 600 : 500,
-              color: isActive ? 'var(--side-active-text)' : 'var(--side-text-2)',
-              background: isActive ? 'var(--side-active-bg)' : 'transparent',
-              textDecoration: 'none',
-              transition: 'background 80ms, color 80ms',
-            })}
-            onMouseEnter={(e) => {
-              const el = e.currentTarget
-              if (!el.getAttribute('aria-current')) {
-                el.style.background = 'var(--side-bg-2)'
-                el.style.color = 'var(--side-text)'
-              }
-            }}
-            onMouseLeave={(e) => {
-              const el = e.currentTarget
-              if (!el.getAttribute('aria-current')) {
-                el.style.background = 'transparent'
-                el.style.color = 'var(--side-text-2)'
-              }
-            }}
-          >
-            <Icon />
-            <span className="flex-1">{label}</span>
-            {badge && overdueCount > 0 && (
-              <span
-                className="num"
-                style={{
-                  fontSize: 10.5, padding: '1px 6px', borderRadius: 999,
-                  background: 'hsl(0 72% 51% / 0.22)',
-                  color: 'hsl(0 65% 78%)',
-                  fontWeight: 600,
-                }}
-              >
-                {overdueCount}
-              </span>
-            )}
-          </NavLink>
-        ))}
-
-        {/* Sub-itens de Planos */}
-        <div style={{ marginLeft: 14, paddingLeft: 10, borderLeft: '1px solid var(--side-border)', display: 'flex', flexDirection: 'column', gap: 1 }}>
-          {planSubItems.map(({ to, icon: Icon, label }) => (
+          <div key={to}>
             <NavLink
-              key={to}
               to={to}
               style={({ isActive }) => ({
-                display: 'flex', alignItems: 'center', gap: 8,
-                padding: '6px 8px', borderRadius: 6,
-                fontSize: 12.5, fontWeight: isActive ? 600 : 500,
+                display: 'flex', alignItems: 'center', gap: 10,
+                padding: '8px 10px', borderRadius: 8,
+                fontSize: 13.5, fontWeight: isActive ? 600 : 500,
                 color: isActive ? 'var(--side-active-text)' : 'var(--side-text-2)',
                 background: isActive ? 'var(--side-active-bg)' : 'transparent',
                 textDecoration: 'none',
@@ -228,10 +180,61 @@ export function AdminSidebar() {
               }}
             >
               <Icon />
-              <span>{label}</span>
+              <span className="flex-1">{label}</span>
+              {badge && overdueCount > 0 && (
+                <span
+                  className="num"
+                  style={{
+                    fontSize: 10.5, padding: '1px 6px', borderRadius: 999,
+                    background: 'hsl(0 72% 51% / 0.22)',
+                    color: 'hsl(0 65% 78%)',
+                    fontWeight: 600,
+                  }}
+                >
+                  {overdueCount}
+                </span>
+              )}
             </NavLink>
-          ))}
-        </div>
+
+            {/* Sub-itens de Planos — renderizados imediatamente após o item pai */}
+            {to === '/plans' && (
+              <div style={{ marginLeft: 14, paddingLeft: 10, borderLeft: '1px solid var(--side-border)', display: 'flex', flexDirection: 'column', gap: 1, marginTop: 1 }}>
+                {planSubItems.map(({ to: subTo, icon: SubIcon, label: subLabel }) => (
+                  <NavLink
+                    key={subTo}
+                    to={subTo}
+                    style={({ isActive }) => ({
+                      display: 'flex', alignItems: 'center', gap: 8,
+                      padding: '6px 8px', borderRadius: 6,
+                      fontSize: 12.5, fontWeight: isActive ? 600 : 500,
+                      color: isActive ? 'var(--side-active-text)' : 'var(--side-text-2)',
+                      background: isActive ? 'var(--side-active-bg)' : 'transparent',
+                      textDecoration: 'none',
+                      transition: 'background 80ms, color 80ms',
+                    })}
+                    onMouseEnter={(e) => {
+                      const el = e.currentTarget
+                      if (!el.getAttribute('aria-current')) {
+                        el.style.background = 'var(--side-bg-2)'
+                        el.style.color = 'var(--side-text)'
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      const el = e.currentTarget
+                      if (!el.getAttribute('aria-current')) {
+                        el.style.background = 'transparent'
+                        el.style.color = 'var(--side-text-2)'
+                      }
+                    }}
+                  >
+                    <SubIcon />
+                    <span>{subLabel}</span>
+                  </NavLink>
+                ))}
+              </div>
+            )}
+          </div>
+        ))}
       </nav>
 
       {/* System section */}
