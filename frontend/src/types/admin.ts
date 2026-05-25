@@ -25,23 +25,8 @@ export interface Organization {
   userCount?: number | null
 }
 
-// Feature keys habilitadas num plano — alinhado com PlanFeature em pelvi-ui
-// A lista completa e autoritativa vem de GET /plan-features (PlanFeatureDefinition no banco)
-export type PlanFeatureKey =
-  | 'AGENDA'
-  | 'PATIENTS'
-  | 'FINANCIAL_BASIC'
-  | 'FINANCIAL_ADVANCED'
-  | 'PERINEAL_ASSESSMENT'
-  | 'TREATMENT_PACKAGES'
-  | 'ANAMNESIS'
-  | 'EVOLUTIONS'
-  | 'ROLES'
-  | 'MULTI_PROFESSIONAL'
-  | 'MULTI_CLINIC'
-  | 'PRIORITY_SUPPORT'
-  | 'DOCUMENTS'
-  | (string & {}) // permite keys futuras cadastradas via admin sem rebuild
+// Feature keys habilitadas num plano — lista autoritativa vem de GET /plan-features (DB)
+export type PlanFeatureKey = string
 
 export interface FeatureDefinition {
   id: string
