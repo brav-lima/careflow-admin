@@ -196,11 +196,11 @@ export class ClinicApiService implements OnModuleInit {
   async updateClinicAccess(
     clinicId: string,
     status: ClinicAccessStatus,
-    limits?: { maxUsers: number; maxPatients: number },
+    limits?: { maxUsers: number; maxPatients: number; plan?: string },
   ): Promise<void> {
     this.logger.log(
       `Updating clinic ${clinicId} access → ${status}` +
-        (limits ? ` (maxUsers=${limits.maxUsers}, maxPatients=${limits.maxPatients})` : ''),
+        (limits ? ` (maxUsers=${limits.maxUsers}, maxPatients=${limits.maxPatients}, plan=${limits.plan ?? '-'})` : ''),
     )
 
     const res = await this.fetchWithTimeout(this.buildUrl`/api/internal/clinics/${clinicId}/access`, {

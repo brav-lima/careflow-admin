@@ -88,7 +88,7 @@ describe('UpdateOrgStatusUseCase', () => {
   })
 
   it('passes plan limits from active subscription to updateClinicAccess', async () => {
-    const sub = { plan: { maxUsers: 10, maxPatients: 500 } }
+    const sub = { plan: { maxUsers: 10, maxPatients: 500, name: 'Origem' } }
     prisma = makePrisma(sub)
     const orgEventsLocal = { record: jest.fn().mockResolvedValue(undefined), list: jest.fn() } as any
     sut = new UpdateOrgStatusUseCase(repo as any, clinicApi, prisma as any, orgEventsLocal)
@@ -101,6 +101,7 @@ describe('UpdateOrgStatusUseCase', () => {
     expect(clinicApi.updateClinicAccess).toHaveBeenCalledWith('clinic-1', 'ACTIVE', {
       maxUsers: 10,
       maxPatients: 500,
+      plan: 'Origem',
     })
   })
 
