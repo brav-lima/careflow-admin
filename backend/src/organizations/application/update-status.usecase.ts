@@ -32,7 +32,7 @@ export class UpdateOrgStatusUseCase {
         include: { plan: true },
       })
       const limits = sub
-        ? { maxUsers: sub.plan.maxUsers, maxPatients: sub.plan.maxPatients }
+        ? { maxUsers: sub.plan.maxUsers, maxPatients: sub.plan.maxPatients, plan: sub.plan.name }
         : undefined
 
       await this.clinicApi.updateClinicAccess(

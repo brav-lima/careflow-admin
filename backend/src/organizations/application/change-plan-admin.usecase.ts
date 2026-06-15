@@ -41,6 +41,7 @@ export class ChangePlanAdminUseCase {
       await this.clinicApi.updateClinicAccess(org.clinicExternalId, 'ACTIVE', {
         maxUsers: newPlan.maxUsers,
         maxPatients: newPlan.maxPatients,
+        plan: newPlan.name,
       })
     }
 
