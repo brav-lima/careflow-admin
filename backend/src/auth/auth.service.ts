@@ -71,7 +71,7 @@ export class AuthService {
     if (stored.revokedAt) {
       // Reuse detection: presented token was already rotated. Revoke the whole family.
       await this.prisma.adminRefreshToken.updateMany({
-        where: { userId, revokedAt: null },
+        where: { userId: String(userId), revokedAt: null },
         data: { revokedAt: new Date() },
       })
       throw new UnauthorizedException('Refresh token reutilizado')
@@ -112,7 +112,7 @@ export class AuthService {
 
     // Revoke all existing refresh tokens (other sessions)
     await this.prisma.adminRefreshToken.updateMany({
-      where: { userId, revokedAt: null },
+      where: { userId: String(userId), revokedAt: null },
       data: { revokedAt: new Date() },
     })
 
