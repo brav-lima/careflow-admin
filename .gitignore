@@ -1,5 +1,3 @@
-/docs
-
 # Local environment files with secrets — never commit
 .env
 .env.*
